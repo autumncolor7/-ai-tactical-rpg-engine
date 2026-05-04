@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>鋼域遠征</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      background: #111719;
+      color: #eef3ef;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
+      overflow: hidden;
+    }
+
+    #game {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="game"></div>
+  <script>
+    const W = 1280;
+    const H = 720;
+    const palette = {
+      bg: 0x111719,
+      panel: 0x1c2727,
+      panel2: 0x243232,
+      line: 0x536260,
+      text: '#edf4ef',
+      muted: '#a7b7b1',
+      accent: 0x56d08a,
+      amber: 0xf3b44a,
+      red: 0xea6a5d,
+      blue: 0x62a7ff,
+      purple: 0xb384ff
+    };
+
+    const gameState = {
+      level: 1,
+      credits: 220,
+      selectedPart: '突擊核心',
+      ownedParts: ['突擊核心', '輕型履帶', '反應裝甲'],
+      unlockedParts: ['突擊核心', '輕型履帶', '反應裝甲', '電磁砲管', '修復模組'],
+      stats: { hp: 10, atk: 3, move: 3, range: 1, armor: 0 }
+    };
+
+    const partData = {
+      '突擊核心': { slot: '核心', cost: 0, hp: 2, atk: 1, move: 0, range: 0, armor: 0, note: '穩定的近戰火力。' },
+      '輕型履帶': { slot: '移動', cost: 0, hp: 0, atk: 0, move: 1, range: 0, armor: 0, note: '增加戰術移動距離。' },
+      '反應裝甲': { slot: '裝甲', cost: 0, hp: 3, atk: 0, move: -1, range: 0, armor: 1, note: '提高生命與減傷。' },
+      '電磁砲管': { slot: '武器', cost: 180, hp: 0, atk: 2, move: 0, range: 2, armor: 0, note: '攻擊距離更遠。' },
+      '修復模組': { slot: '輔助', cost: 150, hp: 4, atk: 0, move: 0, range: 0, armor: 0, note: '提高續戰力。' }
+    };
+
+    function computeStats() {
+      const base = { hp: 8, atk: 2, move: 3, range: 1, armor: 0 };
+      gameState.ownedParts.forEach((name) => {
+        const p = partData[name];
+        base.hp += p.hp;
+        base.atk += p.atk;
+        base.move += p.move;
+        base.range += p.range;
+        base.armor += p.armor;
+      });
+      base.move = Math.max(2, base.move);
+      base.range = Math.max(1, base.range);
+      gameState.stats = base;
+      return base;
+    }
+
+    class Button {
+      constructor(scene, x, y, width, height, label, onClick, opts = {}) {
+        this.scene = scene;
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+        this.bg = scene.add.rectangle(x, y, width, height, opts.fill || palette.accent, 1)
+          .setStrokeStyle(2, opts.stroke || 0xcaf7d7)
+          .setInteractive({ useHandCursor: true });
+        this.label = scene.add.text(x, y, label, {
+          fontFamily: '"Microsoft JhengHei", Arial',
+          fontSize: opts.fontSize || '22px',
+          color: opts.color || '#092014',
+          fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.bg.on('pointerover', () => this.bg.setFillStyle(opts.hover || 0x77e6a8));
+        this.bg.on('pointerout', () => this.bg.setFillStyle(opts.fill || palette.accent));
+        this.bg.on('pointerdown', onClick);
+      }
+
+      destroy() {
+        this.bg.destroy();
+        this.label.destroy();
+      }
+    }
+
+    class HangarScene extends Phaser.Scene {
+      constructor() {
+        super('HangarScene');
+      }
+
+      create() {
+        computeStats();
+        this.cameras.main.setBackgroundColor('#111719');
+        this.drawBackground();
+        this.drawHeader();
+        this.drawMechPanel();
+        this.drawPartsPanel();
+        this.drawUpgradePanel();
+        this.drawBottomBar();
+      }
+
+      drawBackground() {
+        const g = this.add.graphics();
+        g.fillStyle(0x111719, 1).fillRect(0, 0, W, H);
+        g.fillStyle(0x172121, 1).fillRect(0, 88, W, 512);
+        for (let x = 0; x < W; x += 64) {
+          g.lineStyle(1, 0x2b3938, 0.4).lineBetween(x, 88, x + 140, 600);
+        }
+        g.fillStyle(0x0d1112, 1).fillRect(0, 600, W, 120);
+      }
+
+      drawHeader() {
+        this.add.text(42, 28, '鋼域遠征', {
+          fontSize: '34px',
+          fontStyle: 'bold',
+          color: palette.text
+        });
+        this.add.text(44, 66, `第 ${gameState.level} 關準備中`, {
+          fontSize: '16px',
+          color: palette.muted
+        });
+        this.add.text(1040, 32, `資源 ${gameState.credits}`, {
+          fontSize: '24px',
+          fontStyle: 'bold',
+          color: '#f5d187'
+        });
+      }
+
+      panel(x, y, w, h, title) {
+        const g = this.add.graphics();
+        g.fillStyle(palette.panel, 0.96).fillRoundedRect(x, y, w, h, 8);
+        g.lineStyle(2, palette.line, 1).strokeRoundedRect(x, y, w, h, 8);
+        this.add.text(x + 22, y + 18, title, {
+          fontSize: '22px',
+          fontStyle: 'bold',
+          color: palette.text
+        });
+      }
+
+      drawMechPanel() {
+        this.panel(42, 116, 340, 438, '機體改造');
+        const g = this.add.graphics();
+        g.fillStyle(0x263433, 1).fillRoundedRect(96, 185, 230, 210, 8);
+        g.lineStyle(3, 0x6d817d, 1).strokeRoundedRect(96, 185, 230, 210, 8);
+        g.fillStyle(0x8ba09b, 1).fillRect(180, 222, 62, 102);
+        g.fillStyle(0x465d5a, 1).fillRect(156, 246, 24, 86);
+        g.fillStyle(0x465d5a, 1).fillRect(242, 246, 24, 86);
+        g.fillStyle(palette.accent, 1).fillCircle(211, 254, 18);
+        g.fillStyle(0x2a3335, 1).fillRect(164, 330, 94, 32);
+        g.fillStyle(palette.amber, 1).fillRect(192, 196, 38, 26);
+        g.fillStyle(palette.blue, 1).fillTriangle(268, 228, 318, 244, 268, 260);
+        const stats = gameState.stats;
+        const rows = [
+          ['生命', stats.hp],
+          ['攻擊', stats.atk],
+          ['移動', stats.move],
+          ['射程', stats.range],
+          ['裝甲', stats.armor]
+        ];
+        rows.forEach((row, i) => {
+          const y = 418 + i * 26;
+          this.add.text(78, y, row[0], { fontSize: '17px', color: palette.muted });
+          this.add.text(290, y, String(row[1]), { fontSize: '19px', color: palette.text, fontStyle: 'bold' }).setOrigin(1, 0);
+        });
+      }
+
+      drawPartsPanel() {
+        this.panel(414, 116, 414, 438, '零件庫');
+        this.partButtons = [];
+        gameState.unlockedParts.forEach((name, i) => {
+          const p = partData[name];
+          const x = 444;
+          const y = 178 + i * 68;
+          const owned = gameState.ownedParts.includes(name);
+          const selected = gameState.selectedPart === name;
+          const rect = this.add.rectangle(x, y, 354, 54, selected ? 0x314b40 : 0x243232, 1)
+            .setOrigin(0, 0.5)
+            .setStrokeStyle(2, selected ? palette.accent : palette.line)
+            .setInteractive({ useHandCursor: true });
+          this.add.text(x + 18, y - 17, name, {
+            fontSize: '19px',
+            fontStyle: 'bold',
+            color: owned ? palette.text : '#d6c08a'
+          });
+          this.add.text(x + 18, y + 8, `${p.slot}  ${p.note}`, {
+            fontSize: '14px',
+            color: palette.muted
+          });
+          this.add.text(x + 334, y - 10, owned ? '已裝配' : `${p.cost}`, {
+            fontSize: '16px',
+            fontStyle: 'bold',
+            color: owned ? '#72e5a5' : '#f4c469'
+          }).setOrigin(1, 0);
+          rect.on('pointerdown', () => {
+            gameState.selectedPart = name;
+            this.scene.restart();
+          });
+        });
+      }
+
+      drawUpgradePanel() {
+        this.panel(860, 116, 378, 438, '改造明細');
+        const name = gameState.selectedPart;
+        const p = partData[name];
+        const owned = gameState.ownedParts.includes(name);
+        this.add.text(896, 184, name, {
+          fontSize: '30px',
+          fontStyle: 'bold',
+          color: palette.text
+        });
+        this.add.text(898, 226, p.note, {
+          fontSize: '17px',
+          color: palette.muted,
+          wordWrap: { width: 286 }
+        });
+        const mods = [
+          ['生命', p.hp],
+          ['攻擊', p.atk],
+          ['移動', p.move],
+          ['射程', p.range],
+          ['裝甲', p.armor]
+        ];
+        mods.forEach((m, i) => {
+          const value = m[1] > 0 ? `+${m[1]}` : String(m[1]);
+          this.add.text(900, 292 + i * 32, m[0], { fontSize: '18px', color: palette.muted });
+          this.add.text(1166, 292 + i * 32, value, {
+            fontSize: '19px',
+            fontStyle: 'bold',
+            color: m[1] >= 0 ? '#8ff0b6' : '#ff9c92'
+          }).setOrigin(1, 0);
+        });
+        if (owned) {
+          this.add.text(900, 482, '此零件已裝配到機體。', { fontSize: '18px', color: '#8ff0b6' });
+        } else {
+          new Button(this, 900 + 146, 504, 292, 48, `購買並裝配 ${p.cost}`, () => {
+            if (gameState.credits >= p.cost) {
+              gameState.credits -= p.cost;
+              gameState.ownedParts.push(name);
+              computeStats();
+              this.scene.restart();
+            } else {
+              this.flashMessage('資源不足');
+            }
+          }, { fill: palette.amber, hover: 0xffcf6a, color: '#251600' });
+        }
+      }
+
+      flashMessage(text) {
+        const msg = this.add.text(W / 2, 92, text, {
+          fontSize: '22px',
+          color: '#ffd1c9',
+          fontStyle: 'bold'
+        }).setOrigin(0.5);
+        this.tweens.add({ targets: msg, y: 72, alpha: 0, duration: 900, onComplete: () => msg.destroy() });
+      }
+
+      drawBottomBar() {
+        const g = this.add.graphics();
+        g.fillStyle(0x0b0f10, 1).fillRect(0, 600, W, 120);
+        g.lineStyle(2, 0x384846, 1).lineBetween(0, 600, W, 600);
+        this.add.text(42, 626, '戰術目標', { fontSize: '18px', color: palette.muted });
+        this.add.text(42, 654, '佔住地形、消滅敵方偵察機。點選我方單位後，選格移動或攻擊。', {
+          fontSize: '20px',
+          color: palette.text
+        });
+        new Button(this, 960, 660, 252, 58, '進入下一關', () => {
+          this.scene.start('BattleScene');
+        }, { fontSize: '24px' });
+      }
+    }
+
+    class BattleScene extends Phaser.Scene {
+      constructor() {
+        super('BattleScene');
+      }
+
+      create() {
+        this.cols = 8;
+        this.rows = 6;
+        this.tile = 72;
+        this.originX = 284;
+        this.originY = 126;
+        this.phase = 'player';
+        this.selected = null;
+        this.player = {
+          team: 'player',
+          x: 1,
+          y: 3,
+          hp: gameState.stats.hp,
+          maxHp: gameState.stats.hp,
+          atk: gameState.stats.atk,
+          move: gameState.stats.move,
+          range: gameState.stats.range
+        };
+        this.enemies = [
+          { team: 'enemy', x: 5, y: 2, hp: 5 + gameState.level, maxHp: 5 + gameState.level, atk: 2, move: 2, range: 1 },
+          { team: 'enemy', x: 6, y: 4, hp: 4 + gameState.level, maxHp: 4 + gameState.level, atk: 2, move: 2, range: 1 }
+        ];
+        this.cameras.main.setBackgroundColor('#101719');
+        this.drawStatic();
+        this.drawAll();
+      }
+
+      drawStatic() {
+        const g = this.add.graphics();
+        g.fillStyle(0x101719, 1).fillRect(0, 0, W, H);
+        g.fillStyle(0x172322, 1).fillRect(0, 0, 248, H);
+        g.fillStyle(0x0b0f10, 1).fillRect(0, 600, W, 120);
+        this.add.text(36, 34, `第 ${gameState.level} 關`, { fontSize: '32px', color: palette.text, fontStyle: 'bold' });
+        this.add.text(38, 78, '玩家回合', { fontSize: '19px', color: '#8ff0b6' }).setName('phaseText');
+        new Button(this, 56, 652, 146, 44, '返回機庫', () => this.scene.start('HangarScene'), {
+          fill: 0x2b3a39,
+          hover: 0x3b504d,
+          color: '#edf4ef',
+          stroke: 0x6c807b,
+          fontSize: '18px'
+        });
+      }
+
+      clearDynamic() {
+        if (this.dynamicObjects) {
+          this.dynamicObjects.forEach((obj) => obj.destroy());
+        }
+        this.dynamicObjects = [];
+      }
+
+      drawAll() {
+        this.clearDynamic();
+        this.drawGrid();
+        this.drawUnits();
+        this.drawHud();
+      }
+
+      addDyn(obj) {
+        this.dynamicObjects.push(obj);
+        return obj;
+      }
+
+      drawGrid() {
+        const highlights = this.selected ? this.getReachable(this.player) : [];
+        const attacks = this.selected ? this.getAttackable(this.player) : [];
+        for (let y = 0; y < this.rows; y++) {
+          for (let x = 0; x < this.cols; x++) {
+            const wx = this.originX + x * this.tile;
+            const wy = this.originY + y * this.tile;
+            const isMove = highlights.some((p) => p.x === x && p.y === y);
+            const isAttack = attacks.some((p) => p.x === x && p.y === y);
+            const color = isAttack ? 0x4c2f2f : isMove ? 0x274333 : ((x + y) % 2 ? 0x263534 : 0x20302f);
+            const rect = this.addDyn(this.add.rectangle(wx, wy, this.tile - 4, this.tile - 4, color, 1)
+              .setOrigin(0, 0)
+              .setStrokeStyle(1, isAttack ? palette.red : isMove ? palette.accent : 0x445653)
+              .setInteractive({ useHandCursor: true }));
+            rect.on('pointerdown', () => this.handleTile(x, y));
+          }
+        }
+      }
+
+      drawUnits() {
+        this.drawUnit(this.player);
+        this.enemies.forEach((e) => this.drawUnit(e));
+      }
+
+      drawUnit(unit) {
+        const cx = this.originX + unit.x * this.tile + this.tile / 2;
+        const cy = this.originY + unit.y * this.tile + this.tile / 2;
+        const color = unit.team === 'player' ? palette.blue : palette.red;
+        const body = this.addDyn(this.add.rectangle(cx, cy, 42, 42, color, 1)
+          .setStrokeStyle(3, 0xf1f7f0)
+          .setInteractive({ useHandCursor: unit.team === 'player' }));
+        this.addDyn(this.add.rectangle(cx, cy - 4, 24, 18, 0x1b2527, 1));
+        this.addDyn(this.add.circle(cx - 9, cy - 5, 3, 0xffffff, 1));
+        this.addDyn(this.add.circle(cx + 9, cy - 5, 3, 0xffffff, 1));
+        const hpW = 46 * (unit.hp / unit.maxHp);
+        this.addDyn(this.add.rectangle(cx - 23, cy + 30, 46, 6, 0x2d3435, 1).setOrigin(0, 0.5));
+        this.addDyn(this.add.rectangle(cx - 23, cy + 30, hpW, 6, unit.team === 'player' ? palette.accent : palette.amber, 1).setOrigin(0, 0.5));
+        this.addDyn(this.add.text(cx, cy + 38, `${unit.hp}/${unit.maxHp}`, {
+          fontSize: '12px',
+          color: palette.text
+        }).setOrigin(0.5));
+        if (unit.team === 'player') {
+          body.on('pointerdown', () => {
+            if (this.phase === 'player') {
+              this.selected = true;
+              this.drawAll();
+            }
+          });
+        }
+      }
+
+      drawHud() {
+        const stats = gameState.stats;
+        const lines = [
+          ['生命', `${this.player.hp}/${this.player.maxHp}`],
+          ['攻擊', stats.atk],
+          ['移動', stats.move],
+          ['射程', stats.range],
+          ['敵軍', this.enemies.length]
+        ];
+        lines.forEach((line, i) => {
+          this.addDyn(this.add.text(38, 154 + i * 34, line[0], { fontSize: '18px', color: palette.muted }));
+          this.addDyn(this.add.text(184, 154 + i * 34, String(line[1]), { fontSize: '19px', color: palette.text, fontStyle: 'bold' }).setOrigin(1, 0));
+        });
+        const tip = this.phase === 'player'
+          ? '點我方機體選取，再點亮起格子移動；紅格可攻擊。'
+          : '敵方行動中';
+        this.addDyn(this.add.text(286, 626, tip, { fontSize: '20px', color: palette.text }));
+        if (this.phase === 'player') {
+          const btn = new Button(this, 1070, 660, 188, 48, '結束回合', () => this.enemyTurn(), {
+            fill: 0x2b3a39,
+            hover: 0x3b504d,
+            color: '#edf4ef',
+            stroke: 0x6c807b,
+            fontSize: '20px'
+          });
+          this.dynamicObjects.push(btn.bg, btn.label);
+        }
+      }
+
+      distance(a, b) {
+        return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+      }
+
+      occupied(x, y) {
+        if (this.player.x === x && this.player.y === y) return true;
+        return this.enemies.some((e) => e.x === x && e.y === y);
+      }
+
+      getReachable(unit) {
+        const cells = [];
+        for (let y = 0; y < this.rows; y++) {
+          for (let x = 0; x < this.cols; x++) {
+            const d = Math.abs(unit.x - x) + Math.abs(unit.y - y);
+            if (d > 0 && d <= unit.move && !this.occupied(x, y)) cells.push({ x, y });
+          }
+        }
+        return cells;
+      }
+
+      getAttackable(unit) {
+        const cells = [];
+        this.enemies.forEach((e) => {
+          if (this.distance(unit, e) <= unit.range) cells.push({ x: e.x, y: e.y });
+        });
+        return cells;
+      }
+
+      handleTile(x, y) {
+        if (this.phase !== 'player' || !this.selected) return;
+        const enemy = this.enemies.find((e) => e.x === x && e.y === y);
+        if (enemy && this.distance(this.player, enemy) <= this.player.range) {
+          this.attack(this.player, enemy);
+          this.selected = null;
+          this.afterPlayerAction();
+          return;
+        }
+        const canMove = this.getReachable(this.player).some((p) => p.x === x && p.y === y);
+        if (canMove) {
+          this.player.x = x;
+          this.player.y = y;
+          this.selected = null;
+          this.afterPlayerAction();
+        }
+      }
+
+      attack(attacker, target) {
+        const damage = Math.max(1, attacker.atk - (target.team === 'player' ? gameState.stats.armor : 0));
+        target.hp -= damage;
+        this.cameras.main.shake(130, 0.006);
+        if (target.team === 'enemy' && target.hp <= 0) {
+          this.enemies = this.enemies.filter((e) => e !== target);
+        }
+      }
+
+      afterPlayerAction() {
+        if (this.enemies.length === 0) {
+          this.win();
+          return;
+        }
+        this.drawAll();
+      }
+
+      enemyTurn() {
+        if (this.phase !== 'player') return;
+        this.phase = 'enemy';
+        this.selected = null;
+        this.children.getByName('phaseText')?.setText('敵方回合').setColor('#ffaaa0');
+        this.drawAll();
+        this.time.delayedCall(450, () => {
+          this.enemies.forEach((e) => {
+            if (this.player.hp <= 0) return;
+            if (this.distance(e, this.player) <= e.range) {
+              this.attack(e, this.player);
+            } else {
+              const dx = Math.sign(this.player.x - e.x);
+              const dy = Math.sign(this.player.y - e.y);
+              const options = [
+                { x: e.x + dx, y: e.y },
+                { x: e.x, y: e.y + dy }
+              ];
+              const next = options.find((p) => p.x >= 0 && p.y >= 0 && p.x < this.cols && p.y < this.rows && !this.occupied(p.x, p.y));
+              if (next) {
+                e.x = next.x;
+                e.y = next.y;
+              }
+            }
+          });
+          if (this.player.hp <= 0) {
+            this.lose();
+          } else {
+            this.phase = 'player';
+            this.children.getByName('phaseText')?.setText('玩家回合').setColor('#8ff0b6');
+            this.drawAll();
+          }
+        });
+      }
+
+      win() {
+        gameState.level += 1;
+        gameState.credits += 110 + gameState.level * 20;
+        this.showResult('任務完成', '回收資源並解鎖下一次改造。', '#8ff0b6');
+      }
+
+      lose() {
+        gameState.credits += 40;
+        this.showResult('機體撤退', '保留少量資源，回機庫重新配置。', '#ffd1c9');
+      }
+
+      showResult(title, body, color) {
+        const cover = this.add.rectangle(W / 2, H / 2, W, H, 0x050707, 0.72);
+        const panel = this.add.rectangle(W / 2, H / 2, 410, 210, 0x1c2727, 1).setStrokeStyle(2, palette.line);
+        this.add.text(W / 2, H / 2 - 62, title, { fontSize: '34px', fontStyle: 'bold', color }).setOrigin(0.5);
+        this.add.text(W / 2, H / 2 - 12, body, { fontSize: '18px', color: palette.text }).setOrigin(0.5);
+        new Button(this, W / 2, H / 2 + 58, 190, 48, '回到主頁', () => this.scene.start('HangarScene'), {
+          fontSize: '20px'
+        });
+      }
+    }
+
+    const config = {
+      type: Phaser.AUTO,
+      parent: 'game',
+      width: W,
+      height: H,
+      backgroundColor: '#111719',
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
+      scene: [HangarScene, BattleScene]
+    };
+
+    window.addEventListener('load', () => {
+      new Phaser.Game(config);
+    });
+  </script>
+</body>
+</html>
