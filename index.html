@@ -264,7 +264,6 @@
         this.drawSquad();
         this.drawRoster();
         this.drawShop();
-        this.drawDetails();
         this.drawBottom();
         drawScanlines(this);
       }
@@ -489,11 +488,209 @@
           fontSize: '19px',
           color: C.white
         });
-        new Button(this, 1012, 660, 250, 56, '出擊下一話', () => this.scene.start('BattleScene'), {
+        new Button(this, 818, 660, 170, 56, '機體改造', () => this.scene.start('UnitSelectScene'), {
+          fill: 0x8a233c,
+          hover: 0xb93455,
+          fontSize: '22px'
+        });
+        new Button(this, 1044, 660, 250, 56, '出擊下一話', () => this.scene.start('BattleScene'), {
           fill: 0x1f7f66,
           hover: 0x29a781,
           fontSize: '24px'
         });
+      }
+    }
+
+    class UnitSelectScene extends Phaser.Scene {
+      constructor() {
+        super('UnitSelectScene');
+      }
+
+      create() {
+        this.cameras.main.setBackgroundColor('#05070e');
+        this.drawBack();
+        this.drawHeader();
+        this.drawList();
+        this.drawPreview();
+        drawScanlines(this);
+      }
+
+      drawBack() {
+        const g = this.add.graphics();
+        g.fillStyle(C.bg).fillRect(0, 0, W, H);
+        g.fillStyle(0x0b1434).fillRect(0, 88, W, 512);
+        g.lineStyle(1, 0x304c9a, 0.28);
+        for (let x = -80; x < W; x += 56) g.lineBetween(x, 600, x + 230, 88);
+        g.fillStyle(0x05070e).fillRect(0, 600, W, 120);
+        g.lineStyle(3, C.line, 1).lineBetween(0, 600, W, 600);
+      }
+
+      drawHeader() {
+        this.add.text(36, 26, '機體選擇', { fontSize: '34px', color: C.white, fontStyle: 'bold' });
+        this.add.text(40, 68, '選擇要改造的機體', { fontSize: '18px', color: C.muted });
+        this.add.text(1000, 36, `資金 ${state.credits}`, { fontSize: '24px', color: '#ffe08a', fontStyle: 'bold' });
+      }
+
+      drawList() {
+        drawPanel(this, 54, 124, 706, 420, '所持機體');
+        state.roster.forEach((item, i) => {
+          const data = unitCatalog[item.id];
+          const row = Math.floor(i / 2);
+          const col = i % 2;
+          const x = 86 + col * 330;
+          const y = 186 + row * 92;
+          const selected = state.selectedId === item.id;
+          const rect = this.add.rectangle(x, y, 300, 68, selected ? 0x263d77 : 0x182753)
+            .setOrigin(0, 0.5)
+            .setStrokeStyle(2, selected ? C.line2 : 0x4f69ad)
+            .setInteractive();
+          rect.on('pointerdown', () => {
+            state.selectedId = item.id;
+            this.scene.restart();
+          });
+          drawMiniMech(this, x + 42, y + 24, 0.68, data);
+          this.add.text(x + 88, y - 24, data.name, { fontSize: '20px', color: C.white, fontStyle: 'bold' });
+          this.add.text(x + 88, y + 1, `${data.pilot} / ${data.role}`, { fontSize: '14px', color: C.muted });
+          this.add.text(x + 88, y + 23, `HP ${data.hp}  攻 ${data.atk}  防 ${data.def}`, { fontSize: '14px', color: '#dfe7ff' });
+        });
+      }
+
+      drawPreview() {
+        drawPanel(this, 804, 124, 392, 420, '改造確認');
+        const u = selectedUnit();
+        drawMiniMech(this, 1000, 300, 2.3, u);
+        this.add.text(860, 166, u.name, { fontSize: '32px', color: C.white, fontStyle: 'bold' });
+        this.add.text(862, 208, `${u.pilot}  ${u.role}`, { fontSize: '17px', color: '#ffe08a' });
+        this.add.text(862, 432, u.note, { fontSize: '16px', color: '#c7d1ff', wordWrap: { width: 280 } });
+        new Button(this, 154, 660, 190, 46, '返回整備', () => this.scene.start('HangarScene'), {
+          fill: 0x24386f,
+          hover: 0x3858a8,
+          fontSize: '19px'
+        });
+        new Button(this, 1010, 660, 260, 56, '進入改造頁面', () => this.scene.start('UpgradeScene'), {
+          fill: 0x8a233c,
+          hover: 0xb93455,
+          fontSize: '24px'
+        });
+      }
+    }
+
+    class UpgradeScene extends Phaser.Scene {
+      constructor() {
+        super('UpgradeScene');
+      }
+
+      create() {
+        this.cameras.main.setBackgroundColor('#05070e');
+        this.drawFullUpgrade();
+        drawScanlines(this);
+      }
+
+      drawFullUpgrade() {
+        const u = selectedUnit();
+        const g = this.add.graphics();
+        g.fillStyle(0x02030a).fillRect(0, 0, W, H);
+        g.fillStyle(0x071137).fillRect(32, 26, 1216, 548);
+        g.lineStyle(4, 0x3155b8, 1).strokeRect(32, 26, 1216, 548);
+        g.lineStyle(2, 0x6d8ff8, 1).strokeRect(42, 36, 1196, 528);
+        g.lineStyle(2, 0x3155b8, 1).lineBetween(32, 138, 1248, 138);
+        g.lineStyle(2, 0x3155b8, 1).lineBetween(690, 26, 690, 574);
+        g.fillStyle(0x040715, 1).fillRect(48, 42, 622, 80);
+        g.fillStyle(0x040715, 1).fillRect(708, 42, 514, 502);
+        g.lineStyle(2, 0x3155b8, 1).strokeRect(708, 42, 514, 502);
+
+        this.add.text(64, 56, u.name, { fontSize: '30px', color: C.white, fontStyle: 'bold' });
+        this.add.text(66, 96, `${u.pilot} / ${u.role}`, { fontSize: '18px', color: '#c7d1ff' });
+        this.add.text(64, 170, 'この能力を改造しますか?', { fontSize: '30px', color: C.white, fontStyle: 'bold' });
+        this.add.text(64, 212, '(最大15段改計)', { fontSize: '24px', color: C.white, fontStyle: 'bold' });
+
+        const portrait = this.add.graphics();
+        portrait.fillStyle(0x0b163a, 1).fillRect(750, 64, 430, 248);
+        portrait.lineStyle(3, 0x3155b8, 1).strokeRect(750, 64, 430, 248);
+        for (let i = 0; i < 44; i++) {
+          portrait.lineStyle(1, 0xffffff, 0.08);
+          portrait.lineBetween(965, 188, 760 + Phaser.Math.Between(0, 400), 76 + Phaser.Math.Between(0, 220));
+        }
+        drawMiniMech(this, 965, 282, 3.0, u);
+
+        const totalCost = state.upgrades.weapon.cost + state.upgrades.weapon.level * 80;
+        this.add.text(64, 270, '資金', { fontSize: '25px', color: C.white, fontStyle: 'bold' });
+        this.add.text(560, 270, String(state.credits), { fontSize: '25px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
+        this.add.text(64, 306, '費用', { fontSize: '25px', color: C.white, fontStyle: 'bold' });
+        this.add.text(560, 306, String(totalCost), { fontSize: '25px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
+
+        const rows = [
+          ['HP', u.hp, u.hp + state.upgrades.armor.level * 4, state.upgrades.armor.level, 'armor'],
+          ['EN', u.en, u.en + state.upgrades.booster.level * 3, state.upgrades.booster.level, 'booster'],
+          ['運動性', u.move * 25, u.move * 25 + state.upgrades.booster.level * 8, state.upgrades.booster.level, 'booster'],
+          ['裝甲', u.def * 25, u.def * 25 + state.upgrades.armor.level * 10, state.upgrades.armor.level, 'armor'],
+          ['限界', 300, 300 + state.upgrades.weapon.level * 10, state.upgrades.weapon.level, 'weapon']
+        ];
+        rows.forEach((row, i) => {
+          const yy = 360 + i * 44;
+          const selected = row[0] === '運動性';
+          if (selected) {
+            g.fillStyle(0x0aa45c, 1).fillRect(54, yy - 4, 190, 34);
+          }
+          this.add.text(72, yy, row[0], { fontSize: '25px', color: C.white, fontStyle: 'bold' });
+          this.add.text(322, yy, String(row[1]), { fontSize: '25px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
+          this.bigArrow(352, yy + 15);
+          this.add.text(450, yy, String(row[2]), { fontSize: '25px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
+          this.bigBars(490, yy + 4, row[3], 15);
+          const hit = this.add.rectangle(326, yy + 16, 520, 36, 0xffffff, 0.001).setInteractive();
+          hit.on('pointerdown', () => this.upgrade(row[4]));
+        });
+
+        this.add.text(744, 346, '改造項目', { fontSize: '26px', color: '#ffe08a', fontStyle: 'bold' });
+        this.add.text(746, 390, `武器改造 Lv${state.upgrades.weapon.level}`, { fontSize: '22px', color: C.white });
+        this.add.text(746, 426, `裝甲改造 Lv${state.upgrades.armor.level}`, { fontSize: '22px', color: C.white });
+        this.add.text(746, 462, `推進器改造 Lv${state.upgrades.booster.level}`, { fontSize: '22px', color: C.white });
+
+        new Button(this, 160, 650, 190, 48, '返回選擇', () => this.scene.start('UnitSelectScene'), {
+          fill: 0x24386f,
+          hover: 0x3858a8,
+          fontSize: '20px'
+        });
+        new Button(this, 430, 650, 190, 48, '返回整備', () => this.scene.start('HangarScene'), {
+          fill: 0x24386f,
+          hover: 0x3858a8,
+          fontSize: '20px'
+        });
+        new Button(this, 1028, 650, 250, 52, '運動性改造', () => this.upgrade('booster'), {
+          fill: 0x0a8a55,
+          hover: 0x12b272,
+          fontSize: '23px'
+        });
+      }
+
+      bigArrow(x, y) {
+        const g = this.add.graphics();
+        g.fillStyle(0xffffff, 1);
+        g.fillTriangle(x, y - 14, x, y + 14, x + 24, y);
+      }
+
+      bigBars(x, y, level, max) {
+        const g = this.add.graphics();
+        for (let i = 0; i < max; i++) {
+          const xx = x + i * 16;
+          g.fillStyle(i < level ? 0xff4d83 : 0xe9edf7, 1);
+          g.fillTriangle(xx, y, xx, y + 28, xx + 12, y + 14);
+        }
+      }
+
+      upgrade(key) {
+        const up = state.upgrades[key];
+        if (up.level >= up.max) return this.toast('已達上限');
+        const cost = up.cost + up.level * 80;
+        if (state.credits < cost) return this.toast('資金不足');
+        state.credits -= cost;
+        up.level += 1;
+        this.scene.restart();
+      }
+
+      toast(text) {
+        const t = this.add.text(W / 2, 608, text, { fontSize: '28px', color: '#ffe08a', fontStyle: 'bold' }).setOrigin(0.5);
+        this.tweens.add({ targets: t, y: 580, alpha: 0, duration: 850, onComplete: () => t.destroy() });
       }
     }
 
@@ -819,7 +1016,7 @@
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
       },
-      scene: [HangarScene, BattleScene]
+      scene: [HangarScene, UnitSelectScene, UpgradeScene, BattleScene]
     };
 
     window.addEventListener('load', () => {
