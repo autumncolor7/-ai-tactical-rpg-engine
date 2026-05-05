@@ -388,34 +388,81 @@
       }
 
       drawDetails() {
-        drawPanel(this, 1032, 112, 218, 438, '機體資料 / 改造');
+        drawPanel(this, 1018, 112, 232, 438, '改造');
         const u = selectedUnit();
-        drawMiniMech(this, 1138, 236, 1.45, u);
-        this.add.text(1060, 152, u.name, { fontSize: '26px', color: C.white, fontStyle: 'bold' });
-        this.add.text(1062, 187, `${u.pilot}  ${u.role}`, { fontSize: '15px', color: '#ffe08a' });
-        const rows = [
-          ['HP', u.hp],
-          ['EN', u.en],
-          ['攻擊', u.atk],
-          ['防禦', u.def],
-          ['移動', u.move],
-          ['射程', u.range]
+        const x = 1036;
+        const y = 148;
+        const w = 196;
+        const h = 286;
+        const g = this.add.graphics();
+        g.fillStyle(0x03040a, 1).fillRect(x, y, w, h);
+        g.lineStyle(2, 0x3155b8, 1).strokeRect(x, y, w, h);
+        g.lineStyle(1, 0x6d8ff8, 0.9).strokeRect(x + 3, y + 3, w - 6, h - 6);
+        g.fillStyle(0x071137, 1).fillRect(x + 3, y + 3, 96, 28);
+        g.lineStyle(1, 0x3155b8, 1).lineBetween(x + 99, y, x + 99, y + h);
+        g.lineStyle(1, 0x3155b8, 1).lineBetween(x, y + 31, x + w, y + 31);
+        g.lineStyle(1, 0x3155b8, 1).lineBetween(x, y + 110, x + w, y + 110);
+
+        this.add.text(x + 8, y + 8, u.name, { fontSize: '13px', color: C.white, fontStyle: 'bold' });
+        this.add.text(x + 8, y + 42, '此能力要改造嗎?', { fontSize: '13px', color: C.white, fontStyle: 'bold' });
+        this.add.text(x + 8, y + 62, '(最大15段)', { fontSize: '12px', color: C.white });
+
+        const portrait = this.add.graphics();
+        portrait.fillStyle(0x071137, 1).fillRect(x + 101, y + 4, 91, 102);
+        portrait.lineStyle(1, 0x1d347b, 1).strokeRect(x + 101, y + 4, 91, 102);
+        for (let i = 0; i < 18; i++) {
+          portrait.lineStyle(1, 0xffffff, 0.08);
+          portrait.lineBetween(x + 146, y + 55, x + 105 + Phaser.Math.Between(0, 82), y + 10 + Phaser.Math.Between(0, 88));
+        }
+        drawMiniMech(this, x + 148, y + 94, 1.08, u);
+
+        const totalLv = state.upgrades.weapon.level + state.upgrades.armor.level + state.upgrades.booster.level;
+        const cost = state.upgrades.weapon.cost + state.upgrades.weapon.level * 80;
+        this.add.text(x + 8, y + 86, '資金', { fontSize: '13px', color: C.white });
+        this.add.text(x + 88, y + 86, String(state.credits).padStart(7, ' '), { fontSize: '13px', color: C.white }).setOrigin(1, 0);
+        this.add.text(x + 8, y + 103, '費用', { fontSize: '13px', color: C.white });
+        this.add.text(x + 88, y + 103, String(cost), { fontSize: '13px', color: C.white }).setOrigin(1, 0);
+
+        const upgradeRows = [
+          ['HP', u.hp, u.hp + state.upgrades.armor.level * 4, state.upgrades.armor.level],
+          ['EN', u.en, u.en + state.upgrades.booster.level * 3, state.upgrades.booster.level],
+          ['運動性', u.move * 25, u.move * 25 + state.upgrades.booster.level * 8, state.upgrades.booster.level],
+          ['裝甲', u.def * 25, u.def * 25 + state.upgrades.armor.level * 10, state.upgrades.armor.level],
+          ['限界', 300, 300 + state.upgrades.weapon.level * 10, state.upgrades.weapon.level]
         ];
-        rows.forEach((r, i) => {
-          this.add.text(1062, 314 + i * 22, r[0], { fontSize: '14px', color: C.muted });
-          this.add.text(1220, 314 + i * 22, String(r[1]), { fontSize: '15px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
+        upgradeRows.forEach((row, i) => {
+          const yy = y + 126 + i * 25;
+          const selected = i === 2;
+          if (selected) {
+            g.fillStyle(0x0aa45c, 1).fillRect(x + 4, yy - 2, 58, 19);
+          }
+          this.add.text(x + 8, yy, row[0], { fontSize: '13px', color: selected ? '#ffffff' : C.white, fontStyle: selected ? 'bold' : 'normal' });
+          this.add.text(x + 78, yy, String(row[1]), { fontSize: '13px', color: C.white }).setOrigin(1, 0);
+          this.drawArrow(x + 84, yy + 7, 0xffffff);
+          this.add.text(x + 114, yy, String(row[2]), { fontSize: '13px', color: C.white }).setOrigin(1, 0);
+          this.drawLevelBars(x + 122, yy + 2, row[3], 15);
         });
-        this.add.text(1060, 454, u.note, { fontSize: '13px', color: '#c7d1ff', wordWrap: { width: 160 } });
-        const ups = Object.entries(state.upgrades);
-        ups.forEach(([key, up], i) => {
-          const y = 512 + i * 38;
-          this.add.text(1060, y, `${up.name} Lv${up.level}`, { fontSize: '13px', color: C.white });
-          new Button(this, 1192, y + 8, 64, 24, `${up.cost}`, () => this.upgrade(key), {
-            fill: 0x8a6a1e,
-            hover: 0xb48925,
-            fontSize: '12px'
-          });
-        });
+
+        this.add.text(x + 8, y + 258, `${u.pilot} / ${u.role}`, { fontSize: '11px', color: '#b8c9ff' });
+        new Button(this, 1074, 466, 72, 28, '武器', () => this.upgrade('weapon'), { fill: 0x8a233c, hover: 0xb93455, fontSize: '13px' });
+        new Button(this, 1158, 466, 72, 28, '裝甲', () => this.upgrade('armor'), { fill: 0x8a233c, hover: 0xb93455, fontSize: '13px' });
+        new Button(this, 1116, 505, 114, 30, '運動性改造', () => this.upgrade('booster'), { fill: 0x0a8a55, hover: 0x12b272, fontSize: '13px' });
+      }
+
+      drawArrow(x, y, color) {
+        const g = this.add.graphics();
+        g.fillStyle(color, 1);
+        g.fillTriangle(x, y - 6, x, y + 6, x + 10, y);
+      }
+
+      drawLevelBars(x, y, level, max) {
+        const g = this.add.graphics();
+        for (let i = 0; i < max; i++) {
+          const xx = x + i * 5;
+          const color = i < level ? 0xff4d83 : 0xe9edf7;
+          g.fillStyle(color, 1);
+          g.fillTriangle(xx, y, xx, y + 12, xx + 4, y + 6);
+        }
       }
 
       upgrade(key) {
