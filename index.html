@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>鋼域遠征</title>
+  <title>鋼鐵小隊64</title>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
   <style>
     html,
@@ -11,8 +11,8 @@
       width: 100%;
       height: 100%;
       margin: 0;
-      background: #111719;
-      color: #eef3ef;
+      background: #05070e;
+      color: #f2f6ff;
       font-family: "Microsoft JhengHei", "Noto Sans TC", Arial, sans-serif;
       overflow: hidden;
     }
@@ -24,6 +24,7 @@
 
     canvas {
       display: block;
+      image-rendering: pixelated;
     }
   </style>
 </head>
@@ -32,77 +33,222 @@
   <script>
     const W = 1280;
     const H = 720;
-    const palette = {
-      bg: 0x111719,
-      panel: 0x1c2727,
-      panel2: 0x243232,
-      line: 0x536260,
-      text: '#edf4ef',
-      muted: '#a7b7b1',
-      accent: 0x56d08a,
-      amber: 0xf3b44a,
-      red: 0xea6a5d,
-      blue: 0x62a7ff,
-      purple: 0xb384ff
+
+    const C = {
+      bg: 0x060814,
+      deep: 0x0b1230,
+      panel: 0x121b3f,
+      panel2: 0x1b2856,
+      line: 0x7896d9,
+      line2: 0xf4d06f,
+      white: '#f2f6ff',
+      muted: '#a7b6e8',
+      green: 0x62e19f,
+      greenText: '#7df2b7',
+      red: 0xff5a5a,
+      blue: 0x4f8dff,
+      amber: 0xf6c85b,
+      darkText: '#071026'
     };
 
-    const gameState = {
+    const unitCatalog = {
+      gundam: {
+        id: 'gundam',
+        name: '高達',
+        pilot: '阿寶',
+        type: 'ace',
+        role: '皇牌機',
+        cost: 0,
+        hp: 42,
+        en: 34,
+        atk: 15,
+        def: 10,
+        move: 5,
+        range: 4,
+        weapon: '光束步槍',
+        melee: '光束軍刀',
+        colors: [0xe9edf4, 0x2467e6, 0xd93434, 0xf2c24f],
+        note: '不能購買。小隊核心，能力均衡。'
+      },
+      mk2: {
+        id: 'mk2',
+        name: '高達Mk-II',
+        pilot: '卡美尤',
+        type: 'ace',
+        role: '皇牌機',
+        cost: 0,
+        hp: 38,
+        en: 36,
+        atk: 16,
+        def: 8,
+        move: 6,
+        range: 4,
+        weapon: '光束步槍',
+        melee: '光束軍刀',
+        colors: [0xdfe6ef, 0x1c2d4f, 0xd64b4b, 0xffdf66],
+        note: '不能購買。速度較高的皇牌機。'
+      },
+      gm: {
+        id: 'gm',
+        name: '吉姆',
+        pilot: '聯邦兵',
+        type: 'mass',
+        role: '量產機',
+        cost: 120,
+        hp: 22,
+        en: 18,
+        atk: 7,
+        def: 5,
+        move: 4,
+        range: 3,
+        weapon: '光束噴槍',
+        melee: '軍刀',
+        colors: [0xd7e8df, 0xa84646, 0x677d86, 0xf0f0f0],
+        note: '便宜可靠，適合填補小隊。'
+      },
+      leo: {
+        id: 'leo',
+        name: '里歐',
+        pilot: 'OZ兵',
+        type: 'mass',
+        role: '量產機',
+        cost: 100,
+        hp: 24,
+        en: 16,
+        atk: 6,
+        def: 6,
+        move: 4,
+        range: 2,
+        weapon: '105mm步槍',
+        melee: '光束劍',
+        colors: [0x6e8753, 0x36472f, 0xcfd6bd, 0xf2c24f],
+        note: '防禦略好，火力普通。'
+      },
+      zaku: {
+        id: 'zaku',
+        name: '渣古II',
+        pilot: '吉翁兵',
+        type: 'mass',
+        role: '量產機',
+        cost: 110,
+        hp: 25,
+        en: 15,
+        atk: 7,
+        def: 5,
+        move: 4,
+        range: 3,
+        weapon: '機槍',
+        melee: '熱能斧',
+        colors: [0x6fa26b, 0x2e4a35, 0x1d221f, 0xd75959],
+        note: '量產火力穩定。'
+      }
+    };
+
+    const upgrades = {
+      weapon: { name: '武器改造', level: 0, max: 5, cost: 160, desc: '全小隊攻擊 +1' },
+      armor: { name: '裝甲改造', level: 0, max: 5, cost: 130, desc: '全小隊防禦 +1' },
+      booster: { name: '推進器改造', level: 0, max: 3, cost: 180, desc: '小隊移動 +1' }
+    };
+
+    const state = {
+      credits: 620,
       level: 1,
-      credits: 220,
-      selectedPart: '突擊核心',
-      ownedParts: ['突擊核心', '輕型履帶', '反應裝甲'],
-      unlockedParts: ['突擊核心', '輕型履帶', '反應裝甲', '電磁砲管', '修復模組'],
-      stats: { hp: 10, atk: 3, move: 3, range: 1, armor: 0 }
+      selectedId: 'gundam',
+      activeSlot: 0,
+      roster: [
+        { uid: 'gundam-1', id: 'gundam' },
+        { uid: 'gm-1', id: 'gm' },
+        { uid: 'leo-1', id: 'leo' }
+      ],
+      squad: ['gundam-1', 'gm-1', 'leo-1'],
+      upgrades: structuredClone(upgrades)
     };
 
-    const partData = {
-      '突擊核心': { slot: '核心', cost: 0, hp: 2, atk: 1, move: 0, range: 0, armor: 0, note: '穩定的近戰火力。' },
-      '輕型履帶': { slot: '移動', cost: 0, hp: 0, atk: 0, move: 1, range: 0, armor: 0, note: '增加戰術移動距離。' },
-      '反應裝甲': { slot: '裝甲', cost: 0, hp: 3, atk: 0, move: -1, range: 0, armor: 1, note: '提高生命與減傷。' },
-      '電磁砲管': { slot: '武器', cost: 180, hp: 0, atk: 2, move: 0, range: 2, armor: 0, note: '攻擊距離更遠。' },
-      '修復模組': { slot: '輔助', cost: 150, hp: 4, atk: 0, move: 0, range: 0, armor: 0, note: '提高續戰力。' }
-    };
+    function unit(uid) {
+      const item = state.roster.find((u) => u.uid === uid);
+      return item ? unitCatalog[item.id] : null;
+    }
 
-    function computeStats() {
-      const base = { hp: 8, atk: 2, move: 3, range: 1, armor: 0 };
-      gameState.ownedParts.forEach((name) => {
-        const p = partData[name];
-        base.hp += p.hp;
-        base.atk += p.atk;
-        base.move += p.move;
-        base.range += p.range;
-        base.armor += p.armor;
+    function selectedUnit() {
+      return unitCatalog[state.selectedId];
+    }
+
+    function squadMembers() {
+      return state.squad.map(unit).filter(Boolean);
+    }
+
+    function squadStats() {
+      const members = squadMembers();
+      const core = members[0] || unitCatalog.gundam;
+      const hp = members.reduce((sum, u, i) => sum + Math.round(u.hp * (i === 0 ? 1 : 0.55)), 0);
+      const en = members.reduce((sum, u, i) => sum + Math.round(u.en * (i === 0 ? 1 : 0.35)), 0);
+      const atk = Math.max(...members.map((u) => u.atk), core.atk) + Math.max(0, members.length - 1) + state.upgrades.weapon.level;
+      const def = Math.round(members.reduce((sum, u, i) => sum + u.def * (i === 0 ? 1 : 0.45), 0)) + state.upgrades.armor.level;
+      const move = Math.max(3, Math.min(...members.map((u) => u.move), core.move) + state.upgrades.booster.level);
+      const range = Math.max(...members.map((u) => u.range), core.range);
+      return { hp, maxHp: hp, en, maxEn: en, atk, def, move, range, coreName: core.name, members };
+    }
+
+    function makeUid(id) {
+      const n = state.roster.filter((u) => u.id === id).length + 1;
+      return `${id}-${Date.now()}-${n}`;
+    }
+
+    function drawPanel(scene, x, y, w, h, title) {
+      const g = scene.add.graphics();
+      g.fillStyle(C.panel, 0.98).fillRect(x, y, w, h);
+      g.lineStyle(3, C.line, 1).strokeRect(x, y, w, h);
+      g.lineStyle(1, C.line2, 0.9).strokeRect(x + 5, y + 5, w - 10, h - 10);
+      scene.add.text(x + 18, y + 14, title, {
+        fontSize: '20px',
+        fontStyle: 'bold',
+        color: C.white
       });
-      base.move = Math.max(2, base.move);
-      base.range = Math.max(1, base.range);
-      gameState.stats = base;
-      return base;
+    }
+
+    function drawScanlines(scene) {
+      const g = scene.add.graphics();
+      g.lineStyle(1, 0xffffff, 0.035);
+      for (let y = 0; y < H; y += 4) {
+        g.lineBetween(0, y, W, y);
+      }
+    }
+
+    function drawMiniMech(scene, x, y, scale, data, flip = false, group = null) {
+      const dir = flip ? -1 : 1;
+      const colors = data.colors;
+      const add = (obj) => {
+        if (group) group.push(obj);
+        return obj;
+      };
+      const r = (dx, dy, w, h, color) => add(scene.add.rectangle(x + dx * scale * dir, y + dy * scale, w * scale, h * scale, color));
+      const c = (dx, dy, rad, color) => add(scene.add.circle(x + dx * scale * dir, y + dy * scale, rad * scale, color));
+      r(0, -18, 20, 26, colors[0]);
+      r(0, -39, 14, 12, colors[0]);
+      r(-13, -18, 7, 22, colors[1]);
+      r(13, -18, 7, 22, colors[1]);
+      r(-7, 2, 8, 24, colors[2]);
+      r(8, 2, 8, 24, colors[2]);
+      r(0, -23, 12, 8, colors[3]);
+      c(0, -40, 2.2, 0x111827);
+      r(26, -21, 24, 5, colors[3]);
     }
 
     class Button {
-      constructor(scene, x, y, width, height, label, onClick, opts = {}) {
+      constructor(scene, x, y, w, h, label, onClick, opts = {}) {
         this.scene = scene;
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.bg = scene.add.rectangle(x, y, width, height, opts.fill || palette.accent, 1)
-          .setStrokeStyle(2, opts.stroke || 0xcaf7d7)
-          .setInteractive({ useHandCursor: true });
-        this.label = scene.add.text(x, y, label, {
-          fontFamily: '"Microsoft JhengHei", Arial',
-          fontSize: opts.fontSize || '22px',
-          color: opts.color || '#092014',
-          fontStyle: 'bold'
+        this.bg = scene.add.rectangle(x, y, w, h, opts.fill || C.blue)
+          .setStrokeStyle(2, opts.stroke || C.line2)
+          .setInteractive();
+        this.text = scene.add.text(x, y, label, {
+          fontSize: opts.fontSize || '18px',
+          fontStyle: 'bold',
+          color: opts.color || C.white,
+          align: 'center'
         }).setOrigin(0.5);
-        this.bg.on('pointerover', () => this.bg.setFillStyle(opts.hover || 0x77e6a8));
-        this.bg.on('pointerout', () => this.bg.setFillStyle(opts.fill || palette.accent));
+        this.bg.on('pointerover', () => this.bg.setFillStyle(opts.hover || 0x6fa2ff));
+        this.bg.on('pointerout', () => this.bg.setFillStyle(opts.fill || C.blue));
         this.bg.on('pointerdown', onClick);
-      }
-
-      destroy() {
-        this.bg.destroy();
-        this.label.destroy();
       }
     }
 
@@ -112,183 +258,195 @@
       }
 
       create() {
-        computeStats();
-        this.cameras.main.setBackgroundColor('#111719');
-        this.drawBackground();
+        this.cameras.main.setBackgroundColor('#05070e');
+        this.drawBack();
         this.drawHeader();
-        this.drawMechPanel();
-        this.drawPartsPanel();
-        this.drawUpgradePanel();
-        this.drawBottomBar();
+        this.drawSquad();
+        this.drawRoster();
+        this.drawShop();
+        this.drawDetails();
+        this.drawBottom();
+        drawScanlines(this);
       }
 
-      drawBackground() {
+      drawBack() {
         const g = this.add.graphics();
-        g.fillStyle(0x111719, 1).fillRect(0, 0, W, H);
-        g.fillStyle(0x172121, 1).fillRect(0, 88, W, 512);
-        for (let x = 0; x < W; x += 64) {
-          g.lineStyle(1, 0x2b3938, 0.4).lineBetween(x, 88, x + 140, 600);
-        }
-        g.fillStyle(0x0d1112, 1).fillRect(0, 600, W, 120);
+        g.fillStyle(C.bg).fillRect(0, 0, W, H);
+        g.fillStyle(0x0b1434).fillRect(0, 88, W, 512);
+        g.lineStyle(1, 0x304c9a, 0.28);
+        for (let x = -120; x < W; x += 56) g.lineBetween(x, 600, x + 260, 88);
+        for (let y = 110; y < 600; y += 46) g.lineBetween(0, y, W, y);
+        g.fillStyle(0x05070e).fillRect(0, 600, W, 120);
       }
 
       drawHeader() {
-        this.add.text(42, 28, '鋼域遠征', {
-          fontSize: '34px',
-          fontStyle: 'bold',
-          color: palette.text
-        });
-        this.add.text(44, 66, `第 ${gameState.level} 關準備中`, {
-          fontSize: '16px',
-          color: palette.muted
-        });
-        this.add.text(1040, 32, `資源 ${gameState.credits}`, {
-          fontSize: '24px',
-          fontStyle: 'bold',
-          color: '#f5d187'
-        });
+        this.add.text(34, 22, '鋼鐵小隊64', { fontSize: '34px', fontStyle: 'bold', color: C.white });
+        this.add.text(38, 62, `第 ${state.level} 話  出擊準備`, { fontSize: '17px', color: C.muted });
+        this.add.text(1000, 31, `資金 ${state.credits}`, { fontSize: '25px', fontStyle: 'bold', color: '#ffe08a' });
       }
 
-      panel(x, y, w, h, title) {
-        const g = this.add.graphics();
-        g.fillStyle(palette.panel, 0.96).fillRoundedRect(x, y, w, h, 8);
-        g.lineStyle(2, palette.line, 1).strokeRoundedRect(x, y, w, h, 8);
-        this.add.text(x + 22, y + 18, title, {
-          fontSize: '22px',
-          fontStyle: 'bold',
-          color: palette.text
-        });
-      }
-
-      drawMechPanel() {
-        this.panel(42, 116, 340, 438, '機體改造');
-        const g = this.add.graphics();
-        g.fillStyle(0x263433, 1).fillRoundedRect(96, 185, 230, 210, 8);
-        g.lineStyle(3, 0x6d817d, 1).strokeRoundedRect(96, 185, 230, 210, 8);
-        g.fillStyle(0x8ba09b, 1).fillRect(180, 222, 62, 102);
-        g.fillStyle(0x465d5a, 1).fillRect(156, 246, 24, 86);
-        g.fillStyle(0x465d5a, 1).fillRect(242, 246, 24, 86);
-        g.fillStyle(palette.accent, 1).fillCircle(211, 254, 18);
-        g.fillStyle(0x2a3335, 1).fillRect(164, 330, 94, 32);
-        g.fillStyle(palette.amber, 1).fillRect(192, 196, 38, 26);
-        g.fillStyle(palette.blue, 1).fillTriangle(268, 228, 318, 244, 268, 260);
-        const stats = gameState.stats;
-        const rows = [
-          ['生命', stats.hp],
-          ['攻擊', stats.atk],
-          ['移動', stats.move],
-          ['射程', stats.range],
-          ['裝甲', stats.armor]
-        ];
-        rows.forEach((row, i) => {
-          const y = 418 + i * 26;
-          this.add.text(78, y, row[0], { fontSize: '17px', color: palette.muted });
-          this.add.text(290, y, String(row[1]), { fontSize: '19px', color: palette.text, fontStyle: 'bold' }).setOrigin(1, 0);
-        });
-      }
-
-      drawPartsPanel() {
-        this.panel(414, 116, 414, 438, '零件庫');
-        this.partButtons = [];
-        gameState.unlockedParts.forEach((name, i) => {
-          const p = partData[name];
-          const x = 444;
-          const y = 178 + i * 68;
-          const owned = gameState.ownedParts.includes(name);
-          const selected = gameState.selectedPart === name;
-          const rect = this.add.rectangle(x, y, 354, 54, selected ? 0x314b40 : 0x243232, 1)
+      drawSquad() {
+        drawPanel(this, 28, 112, 360, 438, '小隊編成');
+        const stats = squadStats();
+        const slotNames = ['隊長', '僚機A', '僚機B'];
+        state.squad.forEach((uid, i) => {
+          const u = unit(uid);
+          const y = 166 + i * 104;
+          const selected = state.activeSlot === i;
+          const rect = this.add.rectangle(54, y, 304, 82, selected ? 0x263d77 : C.panel2)
             .setOrigin(0, 0.5)
-            .setStrokeStyle(2, selected ? palette.accent : palette.line)
-            .setInteractive({ useHandCursor: true });
-          this.add.text(x + 18, y - 17, name, {
-            fontSize: '19px',
-            fontStyle: 'bold',
-            color: owned ? palette.text : '#d6c08a'
-          });
-          this.add.text(x + 18, y + 8, `${p.slot}  ${p.note}`, {
-            fontSize: '14px',
-            color: palette.muted
-          });
-          this.add.text(x + 334, y - 10, owned ? '已裝配' : `${p.cost}`, {
-            fontSize: '16px',
-            fontStyle: 'bold',
-            color: owned ? '#72e5a5' : '#f4c469'
-          }).setOrigin(1, 0);
+            .setStrokeStyle(2, selected ? C.line2 : C.line)
+            .setInteractive();
           rect.on('pointerdown', () => {
-            gameState.selectedPart = name;
+            state.activeSlot = i;
             this.scene.restart();
           });
+          this.add.text(74, y - 32, slotNames[i], { fontSize: '16px', color: '#ffe08a', fontStyle: 'bold' });
+          if (u) {
+            drawMiniMech(this, 100, y + 28, 0.72, u);
+            this.add.text(144, y - 24, u.name, { fontSize: '20px', color: C.white, fontStyle: 'bold' });
+            this.add.text(144, y + 2, `${u.pilot} / ${u.role}`, { fontSize: '14px', color: C.muted });
+            this.add.text(144, y + 23, `${u.weapon}  射程${u.range}`, { fontSize: '14px', color: '#b9c8ff' });
+          } else {
+            this.add.text(142, y - 12, '未編入', { fontSize: '20px', color: C.muted });
+          }
         });
-      }
 
-      drawUpgradePanel() {
-        this.panel(860, 116, 378, 438, '改造明細');
-        const name = gameState.selectedPart;
-        const p = partData[name];
-        const owned = gameState.ownedParts.includes(name);
-        this.add.text(896, 184, name, {
-          fontSize: '30px',
-          fontStyle: 'bold',
-          color: palette.text
-        });
-        this.add.text(898, 226, p.note, {
-          fontSize: '17px',
-          color: palette.muted,
-          wordWrap: { width: 286 }
-        });
-        const mods = [
-          ['生命', p.hp],
-          ['攻擊', p.atk],
-          ['移動', p.move],
-          ['射程', p.range],
-          ['裝甲', p.armor]
+        const rows = [
+          ['HP', `${stats.hp}`],
+          ['EN', `${stats.en}`],
+          ['攻擊', `${stats.atk}`],
+          ['防禦', `${stats.def}`],
+          ['移動/射程', `${stats.move} / ${stats.range}`]
         ];
-        mods.forEach((m, i) => {
-          const value = m[1] > 0 ? `+${m[1]}` : String(m[1]);
-          this.add.text(900, 292 + i * 32, m[0], { fontSize: '18px', color: palette.muted });
-          this.add.text(1166, 292 + i * 32, value, {
-            fontSize: '19px',
-            fontStyle: 'bold',
-            color: m[1] >= 0 ? '#8ff0b6' : '#ff9c92'
-          }).setOrigin(1, 0);
+        rows.forEach((r, i) => {
+          this.add.text(66, 472 + i * 22, r[0], { fontSize: '15px', color: C.muted });
+          this.add.text(330, 472 + i * 22, r[1], { fontSize: '16px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
         });
-        if (owned) {
-          this.add.text(900, 482, '此零件已裝配到機體。', { fontSize: '18px', color: '#8ff0b6' });
-        } else {
-          new Button(this, 900 + 146, 504, 292, 48, `購買並裝配 ${p.cost}`, () => {
-            if (gameState.credits >= p.cost) {
-              gameState.credits -= p.cost;
-              gameState.ownedParts.push(name);
-              computeStats();
-              this.scene.restart();
-            } else {
-              this.flashMessage('資源不足');
-            }
-          }, { fill: palette.amber, hover: 0xffcf6a, color: '#251600' });
+      }
+
+      drawRoster() {
+        drawPanel(this, 414, 112, 360, 438, '所持機體');
+        state.roster.forEach((item, i) => {
+          const data = unitCatalog[item.id];
+          const y = 168 + i * 58;
+          const selected = state.selectedId === item.id;
+          const rect = this.add.rectangle(438, y, 312, 44, selected ? 0x2b407c : 0x182753)
+            .setOrigin(0, 0.5)
+            .setStrokeStyle(2, selected ? C.line2 : 0x4f69ad)
+            .setInteractive();
+          rect.on('pointerdown', () => {
+            state.selectedId = item.id;
+            this.scene.restart();
+          });
+          this.add.text(454, y - 16, data.name, { fontSize: '18px', fontStyle: 'bold', color: C.white });
+          this.add.text(454, y + 7, `${data.pilot}  ${data.role}`, { fontSize: '13px', color: C.muted });
+          this.add.text(732, y - 7, `HP ${data.hp}`, { fontSize: '14px', color: '#dfe7ff' }).setOrigin(1, 0);
+        });
+        new Button(this, 594, 512, 260, 42, '編入選中機體到目前小隊格', () => {
+          const entry = state.roster.find((u) => u.id === state.selectedId);
+          if (!entry) return;
+          if (state.squad.includes(entry.uid)) this.toast('此機體已在小隊中');
+          else {
+            state.squad[state.activeSlot] = entry.uid;
+            this.scene.restart();
+          }
+        }, { fill: 0x3158b7, hover: 0x4774dc, fontSize: '16px' });
+      }
+
+      drawShop() {
+        drawPanel(this, 800, 112, 208, 438, '量產機購買');
+        const items = ['gm', 'leo', 'zaku'];
+        items.forEach((id, i) => {
+          const u = unitCatalog[id];
+          const y = 178 + i * 106;
+          this.add.rectangle(824, y, 160, 82, 0x182753).setOrigin(0, 0.5).setStrokeStyle(2, 0x4f69ad);
+          drawMiniMech(this, 856, y + 24, 0.55, u);
+          this.add.text(900, y - 28, u.name, { fontSize: '17px', color: C.white, fontStyle: 'bold' });
+          this.add.text(900, y - 6, `資金 ${u.cost}`, { fontSize: '14px', color: '#ffe08a' });
+          this.add.text(900, y + 15, `攻${u.atk} 防${u.def}`, { fontSize: '13px', color: C.muted });
+          new Button(this, 936, y + 42, 88, 26, '購入', () => this.buyUnit(id), {
+            fill: 0x304c9a,
+            hover: 0x466bd0,
+            fontSize: '13px'
+          });
+        });
+      }
+
+      buyUnit(id) {
+        const u = unitCatalog[id];
+        if (state.credits < u.cost) {
+          this.toast('資金不足');
+          return;
         }
+        state.credits -= u.cost;
+        const uid = makeUid(id);
+        state.roster.push({ uid, id });
+        state.selectedId = id;
+        this.toast(`${u.name} 配備完了`);
+        this.time.delayedCall(280, () => this.scene.restart());
       }
 
-      flashMessage(text) {
-        const msg = this.add.text(W / 2, 92, text, {
-          fontSize: '22px',
-          color: '#ffd1c9',
-          fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.tweens.add({ targets: msg, y: 72, alpha: 0, duration: 900, onComplete: () => msg.destroy() });
-      }
-
-      drawBottomBar() {
-        const g = this.add.graphics();
-        g.fillStyle(0x0b0f10, 1).fillRect(0, 600, W, 120);
-        g.lineStyle(2, 0x384846, 1).lineBetween(0, 600, W, 600);
-        this.add.text(42, 626, '戰術目標', { fontSize: '18px', color: palette.muted });
-        this.add.text(42, 654, '佔住地形、消滅敵方偵察機。點選我方單位後，選格移動或攻擊。', {
-          fontSize: '20px',
-          color: palette.text
+      drawDetails() {
+        drawPanel(this, 1032, 112, 218, 438, '機體資料 / 改造');
+        const u = selectedUnit();
+        drawMiniMech(this, 1138, 236, 1.45, u);
+        this.add.text(1060, 152, u.name, { fontSize: '26px', color: C.white, fontStyle: 'bold' });
+        this.add.text(1062, 187, `${u.pilot}  ${u.role}`, { fontSize: '15px', color: '#ffe08a' });
+        const rows = [
+          ['HP', u.hp],
+          ['EN', u.en],
+          ['攻擊', u.atk],
+          ['防禦', u.def],
+          ['移動', u.move],
+          ['射程', u.range]
+        ];
+        rows.forEach((r, i) => {
+          this.add.text(1062, 314 + i * 22, r[0], { fontSize: '14px', color: C.muted });
+          this.add.text(1220, 314 + i * 22, String(r[1]), { fontSize: '15px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0);
         });
-        new Button(this, 960, 660, 252, 58, '進入下一關', () => {
-          this.scene.start('BattleScene');
-        }, { fontSize: '24px' });
+        this.add.text(1060, 454, u.note, { fontSize: '13px', color: '#c7d1ff', wordWrap: { width: 160 } });
+        const ups = Object.entries(state.upgrades);
+        ups.forEach(([key, up], i) => {
+          const y = 512 + i * 38;
+          this.add.text(1060, y, `${up.name} Lv${up.level}`, { fontSize: '13px', color: C.white });
+          new Button(this, 1192, y + 8, 64, 24, `${up.cost}`, () => this.upgrade(key), {
+            fill: 0x8a6a1e,
+            hover: 0xb48925,
+            fontSize: '12px'
+          });
+        });
+      }
+
+      upgrade(key) {
+        const up = state.upgrades[key];
+        if (up.level >= up.max) return this.toast('已達上限');
+        const cost = up.cost + up.level * 80;
+        if (state.credits < cost) return this.toast('資金不足');
+        state.credits -= cost;
+        up.level += 1;
+        this.scene.restart();
+      }
+
+      toast(text) {
+        const t = this.add.text(W / 2, 92, text, { fontSize: '22px', color: '#ffe08a', fontStyle: 'bold' }).setOrigin(0.5);
+        this.tweens.add({ targets: t, y: 70, alpha: 0, duration: 900, onComplete: () => t.destroy() });
+      }
+
+      drawBottom() {
+        const g = this.add.graphics();
+        g.fillStyle(0x05070e).fillRect(0, 600, W, 120);
+        g.lineStyle(3, C.line, 1).lineBetween(0, 600, W, 600);
+        this.add.text(36, 624, '作戰方針', { fontSize: '18px', color: '#ffe08a', fontStyle: 'bold' });
+        this.add.text(36, 654, '小隊戰鬥：整備時編成三機，戰鬥時視為同一單位共用一格移動。皇牌機不能購買，量產機可補充。', {
+          fontSize: '19px',
+          color: C.white
+        });
+        new Button(this, 1012, 660, 250, 56, '出擊下一話', () => this.scene.start('BattleScene'), {
+          fill: 0x1f7f66,
+          hover: 0x29a781,
+          fontSize: '24px'
+        });
       }
     }
 
@@ -298,53 +456,69 @@
       }
 
       create() {
-        this.cols = 8;
-        this.rows = 6;
-        this.tile = 72;
-        this.originX = 284;
-        this.originY = 126;
+        this.cols = 9;
+        this.rows = 7;
+        this.tile = 64;
+        this.originX = 292;
+        this.originY = 108;
+        const stats = squadStats();
         this.phase = 'player';
-        this.selected = null;
-        this.player = {
-          team: 'player',
-          x: 1,
-          y: 3,
-          hp: gameState.stats.hp,
-          maxHp: gameState.stats.hp,
-          atk: gameState.stats.atk,
-          move: gameState.stats.move,
-          range: gameState.stats.range
-        };
+        this.selected = false;
+        this.busy = false;
+        this.player = { team: 'player', x: 1, y: 4, hp: stats.hp, maxHp: stats.hp, en: stats.en, maxEn: stats.en, atk: stats.atk, def: stats.def, move: stats.move, range: stats.range, data: stats.members[0] };
         this.enemies = [
-          { team: 'enemy', x: 5, y: 2, hp: 5 + gameState.level, maxHp: 5 + gameState.level, atk: 2, move: 2, range: 1 },
-          { team: 'enemy', x: 6, y: 4, hp: 4 + gameState.level, maxHp: 4 + gameState.level, atk: 2, move: 2, range: 1 }
+          this.enemy('leo', 6, 2, 0),
+          this.enemy('zaku', 7, 4, 1),
+          this.enemy('gm', 5, 5, 2)
         ];
-        this.cameras.main.setBackgroundColor('#101719');
+        this.staticObjects = [];
+        this.dynamicObjects = [];
+        this.cameras.main.setBackgroundColor('#05070e');
         this.drawStatic();
         this.drawAll();
+        drawScanlines(this);
+      }
+
+      enemy(id, x, y, add) {
+        const d = unitCatalog[id];
+        return {
+          team: 'enemy',
+          x,
+          y,
+          hp: d.hp + state.level * 4 + add * 3,
+          maxHp: d.hp + state.level * 4 + add * 3,
+          atk: d.atk + state.level,
+          def: d.def,
+          move: d.move,
+          range: d.range,
+          data: d
+        };
       }
 
       drawStatic() {
         const g = this.add.graphics();
-        g.fillStyle(0x101719, 1).fillRect(0, 0, W, H);
-        g.fillStyle(0x172322, 1).fillRect(0, 0, 248, H);
-        g.fillStyle(0x0b0f10, 1).fillRect(0, 600, W, 120);
-        this.add.text(36, 34, `第 ${gameState.level} 關`, { fontSize: '32px', color: palette.text, fontStyle: 'bold' });
-        this.add.text(38, 78, '玩家回合', { fontSize: '19px', color: '#8ff0b6' }).setName('phaseText');
-        new Button(this, 56, 652, 146, 44, '返回機庫', () => this.scene.start('HangarScene'), {
-          fill: 0x2b3a39,
-          hover: 0x3b504d,
-          color: '#edf4ef',
-          stroke: 0x6c807b,
-          fontSize: '18px'
+        g.fillStyle(C.bg).fillRect(0, 0, W, H);
+        g.fillStyle(0x0a1435).fillRect(0, 0, 248, H);
+        g.fillStyle(0x05070e).fillRect(0, 600, W, 120);
+        g.lineStyle(3, C.line, 1).lineBetween(248, 0, 248, 600);
+        g.lineStyle(3, C.line, 1).lineBetween(0, 600, W, 600);
+        this.add.text(32, 30, `第 ${state.level} 話`, { fontSize: '32px', color: C.white, fontStyle: 'bold' });
+        this.add.text(34, 72, '小隊出擊', { fontSize: '18px', color: '#ffe08a' });
+        new Button(this, 74, 660, 136, 42, '整備室', () => this.scene.start('HangarScene'), {
+          fill: 0x24386f,
+          hover: 0x3858a8,
+          fontSize: '17px'
         });
       }
 
       clearDynamic() {
-        if (this.dynamicObjects) {
-          this.dynamicObjects.forEach((obj) => obj.destroy());
-        }
+        this.dynamicObjects.forEach((o) => o.destroy());
         this.dynamicObjects = [];
+      }
+
+      addDyn(obj) {
+        this.dynamicObjects.push(obj);
+        return obj;
       }
 
       drawAll() {
@@ -354,88 +528,78 @@
         this.drawHud();
       }
 
-      addDyn(obj) {
-        this.dynamicObjects.push(obj);
-        return obj;
-      }
-
       drawGrid() {
-        const highlights = this.selected ? this.getReachable(this.player) : [];
-        const attacks = this.selected ? this.getAttackable(this.player) : [];
+        const moves = this.selected ? this.reachable(this.player) : [];
+        const attacks = this.selected ? this.attackable(this.player) : [];
         for (let y = 0; y < this.rows; y++) {
           for (let x = 0; x < this.cols; x++) {
             const wx = this.originX + x * this.tile;
             const wy = this.originY + y * this.tile;
-            const isMove = highlights.some((p) => p.x === x && p.y === y);
-            const isAttack = attacks.some((p) => p.x === x && p.y === y);
-            const color = isAttack ? 0x4c2f2f : isMove ? 0x274333 : ((x + y) % 2 ? 0x263534 : 0x20302f);
-            const rect = this.addDyn(this.add.rectangle(wx, wy, this.tile - 4, this.tile - 4, color, 1)
-              .setOrigin(0, 0)
-              .setStrokeStyle(1, isAttack ? palette.red : isMove ? palette.accent : 0x445653)
-              .setInteractive({ useHandCursor: true }));
+            const move = moves.some((p) => p.x === x && p.y === y);
+            const attack = attacks.some((p) => p.x === x && p.y === y);
+            const base = (x + y) % 2 ? 0x16284f : 0x102247;
+            const color = attack ? 0x63252f : move ? 0x1d4f4a : base;
+            const rect = this.addDyn(this.add.rectangle(wx, wy, this.tile - 3, this.tile - 3, color).setOrigin(0, 0)
+              .setStrokeStyle(1, attack ? C.red : move ? C.green : 0x365899)
+              .setInteractive());
             rect.on('pointerdown', () => this.handleTile(x, y));
           }
         }
       }
 
       drawUnits() {
-        this.drawUnit(this.player);
-        this.enemies.forEach((e) => this.drawUnit(e));
+        this.drawMapUnit(this.player);
+        this.enemies.forEach((e) => this.drawMapUnit(e));
       }
 
-      drawUnit(unit) {
-        const cx = this.originX + unit.x * this.tile + this.tile / 2;
-        const cy = this.originY + unit.y * this.tile + this.tile / 2;
-        const color = unit.team === 'player' ? palette.blue : palette.red;
-        const body = this.addDyn(this.add.rectangle(cx, cy, 42, 42, color, 1)
-          .setStrokeStyle(3, 0xf1f7f0)
-          .setInteractive({ useHandCursor: unit.team === 'player' }));
-        this.addDyn(this.add.rectangle(cx, cy - 4, 24, 18, 0x1b2527, 1));
-        this.addDyn(this.add.circle(cx - 9, cy - 5, 3, 0xffffff, 1));
-        this.addDyn(this.add.circle(cx + 9, cy - 5, 3, 0xffffff, 1));
-        const hpW = 46 * (unit.hp / unit.maxHp);
-        this.addDyn(this.add.rectangle(cx - 23, cy + 30, 46, 6, 0x2d3435, 1).setOrigin(0, 0.5));
-        this.addDyn(this.add.rectangle(cx - 23, cy + 30, hpW, 6, unit.team === 'player' ? palette.accent : palette.amber, 1).setOrigin(0, 0.5));
-        this.addDyn(this.add.text(cx, cy + 38, `${unit.hp}/${unit.maxHp}`, {
-          fontSize: '12px',
-          color: palette.text
-        }).setOrigin(0.5));
-        if (unit.team === 'player') {
-          body.on('pointerdown', () => {
-            if (this.phase === 'player') {
+      drawMapUnit(u) {
+        const cx = this.originX + u.x * this.tile + this.tile / 2;
+        const cy = this.originY + u.y * this.tile + this.tile / 2 + 14;
+        const parts = [];
+        drawMiniMech(this, cx, cy, 0.78, u.data, u.team === 'enemy', parts);
+        parts.forEach((p) => {
+          this.addDyn(p);
+          if (u.team === 'player') p.setInteractive?.();
+        });
+        const selectPad = this.addDyn(this.add.rectangle(cx, cy - 16, 54, 54, 0xffffff, 0.001).setInteractive());
+        if (u.team === 'player') {
+          selectPad.on('pointerdown', () => {
+            if (this.phase === 'player' && !this.busy) {
               this.selected = true;
               this.drawAll();
             }
           });
         }
+        const bar = Math.max(0, 46 * (u.hp / u.maxHp));
+        this.addDyn(this.add.rectangle(cx - 23, cy + 25, 46, 6, 0x111827).setOrigin(0, 0.5));
+        this.addDyn(this.add.rectangle(cx - 23, cy + 25, bar, 6, u.team === 'player' ? C.green : C.red).setOrigin(0, 0.5));
       }
 
       drawHud() {
-        const stats = gameState.stats;
         const lines = [
-          ['生命', `${this.player.hp}/${this.player.maxHp}`],
-          ['攻擊', stats.atk],
-          ['移動', stats.move],
-          ['射程', stats.range],
-          ['敵軍', this.enemies.length]
+          ['HP', `${this.player.hp}/${this.player.maxHp}`],
+          ['EN', `${this.player.en}/${this.player.maxEn}`],
+          ['攻擊', this.player.atk],
+          ['防禦', this.player.def],
+          ['移動', this.player.move],
+          ['射程', this.player.range],
+          ['敵機', this.enemies.length]
         ];
-        lines.forEach((line, i) => {
-          this.addDyn(this.add.text(38, 154 + i * 34, line[0], { fontSize: '18px', color: palette.muted }));
-          this.addDyn(this.add.text(184, 154 + i * 34, String(line[1]), { fontSize: '19px', color: palette.text, fontStyle: 'bold' }).setOrigin(1, 0));
+        lines.forEach((r, i) => {
+          this.addDyn(this.add.text(32, 132 + i * 31, r[0], { fontSize: '17px', color: C.muted }));
+          this.addDyn(this.add.text(202, 132 + i * 31, String(r[1]), { fontSize: '18px', color: C.white, fontStyle: 'bold' }).setOrigin(1, 0));
         });
         const tip = this.phase === 'player'
-          ? '點我方機體選取，再點亮起格子移動；紅格可攻擊。'
+          ? '點選小隊後，選綠格移動，紅格攻擊。攻擊會切入簡短戰鬥畫面。'
           : '敵方行動中';
-        this.addDyn(this.add.text(286, 626, tip, { fontSize: '20px', color: palette.text }));
+        this.addDyn(this.add.text(292, 628, tip, { fontSize: '20px', color: C.white }));
         if (this.phase === 'player') {
-          const btn = new Button(this, 1070, 660, 188, 48, '結束回合', () => this.enemyTurn(), {
-            fill: 0x2b3a39,
-            hover: 0x3b504d,
-            color: '#edf4ef',
-            stroke: 0x6c807b,
-            fontSize: '20px'
+          const btn = new Button(this, 1104, 660, 176, 46, '回合終了', () => this.enemyTurn(), {
+            fill: 0x24386f,
+            hover: 0x3858a8,
+            fontSize: '19px'
           });
-          this.dynamicObjects.push(btn.bg, btn.label);
+          this.dynamicObjects.push(btn.bg, btn.text);
         }
       }
 
@@ -448,114 +612,153 @@
         return this.enemies.some((e) => e.x === x && e.y === y);
       }
 
-      getReachable(unit) {
+      reachable(u) {
         const cells = [];
         for (let y = 0; y < this.rows; y++) {
           for (let x = 0; x < this.cols; x++) {
-            const d = Math.abs(unit.x - x) + Math.abs(unit.y - y);
-            if (d > 0 && d <= unit.move && !this.occupied(x, y)) cells.push({ x, y });
+            const d = Math.abs(u.x - x) + Math.abs(u.y - y);
+            if (d > 0 && d <= u.move && !this.occupied(x, y)) cells.push({ x, y });
           }
         }
         return cells;
       }
 
-      getAttackable(unit) {
-        const cells = [];
-        this.enemies.forEach((e) => {
-          if (this.distance(unit, e) <= unit.range) cells.push({ x: e.x, y: e.y });
-        });
-        return cells;
+      attackable(u) {
+        return this.enemies.filter((e) => this.distance(u, e) <= u.range).map((e) => ({ x: e.x, y: e.y }));
       }
 
       handleTile(x, y) {
-        if (this.phase !== 'player' || !this.selected) return;
-        const enemy = this.enemies.find((e) => e.x === x && e.y === y);
-        if (enemy && this.distance(this.player, enemy) <= this.player.range) {
-          this.attack(this.player, enemy);
-          this.selected = null;
-          this.afterPlayerAction();
+        if (this.busy || this.phase !== 'player' || !this.selected) return;
+        const target = this.enemies.find((e) => e.x === x && e.y === y);
+        if (target && this.distance(this.player, target) <= this.player.range) {
+          this.selected = false;
+          this.resolveAttack(this.player, target, () => this.afterPlayerAction());
           return;
         }
-        const canMove = this.getReachable(this.player).some((p) => p.x === x && p.y === y);
-        if (canMove) {
+        if (this.reachable(this.player).some((p) => p.x === x && p.y === y)) {
           this.player.x = x;
           this.player.y = y;
-          this.selected = null;
-          this.afterPlayerAction();
+          this.selected = false;
+          this.drawAll();
         }
       }
 
-      attack(attacker, target) {
-        const damage = Math.max(1, attacker.atk - (target.team === 'player' ? gameState.stats.armor : 0));
-        target.hp -= damage;
-        this.cameras.main.shake(130, 0.006);
-        if (target.team === 'enemy' && target.hp <= 0) {
-          this.enemies = this.enemies.filter((e) => e !== target);
-        }
+      damage(attacker, defender) {
+        return Math.max(4, attacker.atk + Phaser.Math.Between(-2, 3) - Math.floor(defender.def / 2));
+      }
+
+      resolveAttack(attacker, defender, done) {
+        this.busy = true;
+        const dmg = this.damage(attacker, defender);
+        this.showBattleCutin(attacker, defender, dmg, () => {
+          defender.hp -= dmg;
+          if (defender.team === 'enemy' && defender.hp <= 0) this.enemies = this.enemies.filter((e) => e !== defender);
+          if (defender.team === 'player' && defender.hp <= 0) this.lose();
+          else {
+            this.busy = false;
+            done?.();
+          }
+        });
+      }
+
+      showBattleCutin(attacker, defender, dmg, done) {
+        const objs = [];
+        const add = (o) => {
+          objs.push(o);
+          return o;
+        };
+        add(this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.82));
+        add(this.add.rectangle(W / 2, 170, W, 180, 0x0a1435).setStrokeStyle(3, C.line));
+        add(this.add.rectangle(W / 2, 430, W, 180, 0x190d13).setStrokeStyle(3, C.red));
+        add(this.add.text(42, 94, `${attacker.data.name}  ${attacker.data.weapon}`, { fontSize: '26px', color: C.white, fontStyle: 'bold' }));
+        add(this.add.text(42, 466, `${defender.data.name}`, { fontSize: '24px', color: '#ffd0d0', fontStyle: 'bold' }));
+        const pParts = [];
+        const eParts = [];
+        drawMiniMech(this, 260, 236, 2.2, attacker.data, false, pParts);
+        drawMiniMech(this, 980, 496, 2.2, defender.data, true, eParts);
+        pParts.forEach(add);
+        eParts.forEach(add);
+        const beam = add(this.add.rectangle(530, 238, 0, 8, 0x8be9ff));
+        const slash = attacker.data.melee.includes('斧') || attacker.data.melee.includes('軍刀');
+        this.tweens.add({
+          targets: pParts,
+          x: slash ? 70 : 0,
+          duration: 180,
+          yoyo: true
+        });
+        this.tweens.add({
+          targets: beam,
+          width: 420,
+          duration: 170,
+          delay: 120,
+          onComplete: () => {
+            eParts.forEach((o) => o.setTint?.(0xffffff));
+            this.cameras.main.shake(160, 0.008);
+            add(this.add.text(900, 386, `${dmg} DAMAGE`, { fontSize: '34px', color: '#ffe08a', fontStyle: 'bold' }));
+            this.time.delayedCall(260, () => eParts.forEach((o) => o.clearTint?.()));
+          }
+        });
+        this.time.delayedCall(850, () => {
+          objs.forEach((o) => o.destroy());
+          done();
+          this.drawAll();
+        });
       }
 
       afterPlayerAction() {
-        if (this.enemies.length === 0) {
-          this.win();
-          return;
-        }
+        if (this.enemies.length === 0) return this.win();
         this.drawAll();
       }
 
       enemyTurn() {
-        if (this.phase !== 'player') return;
+        if (this.busy || this.phase !== 'player') return;
         this.phase = 'enemy';
-        this.selected = null;
-        this.children.getByName('phaseText')?.setText('敵方回合').setColor('#ffaaa0');
+        this.selected = false;
         this.drawAll();
-        this.time.delayedCall(450, () => {
-          this.enemies.forEach((e) => {
-            if (this.player.hp <= 0) return;
-            if (this.distance(e, this.player) <= e.range) {
-              this.attack(e, this.player);
-            } else {
-              const dx = Math.sign(this.player.x - e.x);
-              const dy = Math.sign(this.player.y - e.y);
-              const options = [
-                { x: e.x + dx, y: e.y },
-                { x: e.x, y: e.y + dy }
-              ];
-              const next = options.find((p) => p.x >= 0 && p.y >= 0 && p.x < this.cols && p.y < this.rows && !this.occupied(p.x, p.y));
-              if (next) {
-                e.x = next.x;
-                e.y = next.y;
-              }
-            }
-          });
-          if (this.player.hp <= 0) {
-            this.lose();
-          } else {
+        let i = 0;
+        const step = () => {
+          if (i >= this.enemies.length) {
             this.phase = 'player';
-            this.children.getByName('phaseText')?.setText('玩家回合').setColor('#8ff0b6');
             this.drawAll();
+            return;
           }
-        });
+          const e = this.enemies[i++];
+          if (this.distance(e, this.player) <= e.range) {
+            this.resolveAttack(e, this.player, step);
+          } else {
+            const dx = Math.sign(this.player.x - e.x);
+            const dy = Math.sign(this.player.y - e.y);
+            const tries = [{ x: e.x + dx, y: e.y }, { x: e.x, y: e.y + dy }];
+            const next = tries.find((p) => p.x >= 0 && p.y >= 0 && p.x < this.cols && p.y < this.rows && !this.occupied(p.x, p.y));
+            if (next) {
+              e.x = next.x;
+              e.y = next.y;
+            }
+            this.drawAll();
+            this.time.delayedCall(260, step);
+          }
+        };
+        this.time.delayedCall(350, step);
       }
 
       win() {
-        gameState.level += 1;
-        gameState.credits += 110 + gameState.level * 20;
-        this.showResult('任務完成', '回收資源並解鎖下一次改造。', '#8ff0b6');
+        state.level += 1;
+        state.credits += 300 + state.level * 60;
+        this.result('作戰成功', '獲得資金，返回整備室。');
       }
 
       lose() {
-        gameState.credits += 40;
-        this.showResult('機體撤退', '保留少量資源，回機庫重新配置。', '#ffd1c9');
+        state.credits += 80;
+        this.result('撤退', '小隊大破，返回整備室重新編成。');
       }
 
-      showResult(title, body, color) {
-        const cover = this.add.rectangle(W / 2, H / 2, W, H, 0x050707, 0.72);
-        const panel = this.add.rectangle(W / 2, H / 2, 410, 210, 0x1c2727, 1).setStrokeStyle(2, palette.line);
-        this.add.text(W / 2, H / 2 - 62, title, { fontSize: '34px', fontStyle: 'bold', color }).setOrigin(0.5);
-        this.add.text(W / 2, H / 2 - 12, body, { fontSize: '18px', color: palette.text }).setOrigin(0.5);
-        new Button(this, W / 2, H / 2 + 58, 190, 48, '回到主頁', () => this.scene.start('HangarScene'), {
-          fontSize: '20px'
-        });
+      result(title, body) {
+        this.busy = true;
+        this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.75);
+        this.add.rectangle(W / 2, H / 2, 460, 220, C.panel).setStrokeStyle(3, C.line2);
+        this.add.text(W / 2, H / 2 - 62, title, { fontSize: '36px', color: '#ffe08a', fontStyle: 'bold' }).setOrigin(0.5);
+        this.add.text(W / 2, H / 2 - 8, body, { fontSize: '19px', color: C.white }).setOrigin(0.5);
+        new Button(this, W / 2, H / 2 + 66, 190, 46, '返回整備', () => this.scene.start('HangarScene'));
       }
     }
 
@@ -564,7 +767,7 @@
       parent: 'game',
       width: W,
       height: H,
-      backgroundColor: '#111719',
+      backgroundColor: '#05070e',
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
