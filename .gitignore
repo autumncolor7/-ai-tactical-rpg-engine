@@ -1,3 +1,11 @@
 .DS_Store
 Thumbs.db
 *.log
+
+# Local ROM / reverse-engineering references. Do not commit copyrighted dumps.
+srw64.c
+srw64.n64
+*.n64
+*.z64
+*.v64
+*.rom
