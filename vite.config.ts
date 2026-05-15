@@ -13,6 +13,7 @@ export default defineConfig(({mode}) => {
       'process.env.AI_API_KEY': JSON.stringify(env.AI_API_KEY),
       'process.env.AI_API_MODEL': JSON.stringify(env.AI_API_MODEL),
       'process.env.AI_API_CHAT_PATH': JSON.stringify(env.AI_API_CHAT_PATH),
+      'process.env.AI_API_FORMAT': JSON.stringify(env.AI_API_FORMAT),
     },
     resolve: {
       alias: {

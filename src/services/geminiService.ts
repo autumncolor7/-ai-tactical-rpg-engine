@@ -6,7 +6,8 @@ let ai: GoogleGenAI | null = null;
 const customApiBaseUrl = process.env.AI_API_BASE_URL?.replace(/\/+$/, '') || '';
 const customApiKey = process.env.AI_API_KEY || '';
 const customApiModel = process.env.AI_API_MODEL || 'gpt-4o-mini';
-const customApiChatPath = process.env.AI_API_CHAT_PATH || '/v1/chat/completions';
+const customApiChatPath = process.env.AI_API_CHAT_PATH || '/v1/responses';
+const customApiFormat = (process.env.AI_API_FORMAT || 'responses').toLowerCase();
 
 function getAiClient(): GoogleGenAI | null {
   if (!geminiApiKey) return null;
@@ -38,30 +39,58 @@ function extractJsonObject(text: string): any | null {
 
 async function callCustomChatApi(systemInstruction: string, userPrompt: string): Promise<string | null> {
   if (!customApiBaseUrl || !customApiKey) return null;
-  try {
-    const response = await fetch(`${customApiBaseUrl}${customApiChatPath}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${customApiKey}`
+  const authHeaderValue = customApiKey.startsWith('Bearer ') ? customApiKey : `Bearer ${customApiKey}`;
+  const responsesBody = {
+    model: customApiModel,
+    stream: false,
+    input: [
+      {
+        role: 'system',
+        content: [{ type: 'input_text', text: systemInstruction }]
       },
-      body: JSON.stringify({
-        model: customApiModel,
-        temperature: 0.2,
-        messages: [
-          { role: 'system', content: systemInstruction },
-          { role: 'user', content: userPrompt }
-        ]
-      })
-    });
+      {
+        role: 'user',
+        content: [{ type: 'input_text', text: userPrompt }]
+      }
+    ]
+  };
+  const chatBody = {
+    model: customApiModel,
+    temperature: 0.2,
+    messages: [
+      { role: 'system', content: systemInstruction },
+      { role: 'user', content: userPrompt }
+    ]
+  };
 
-    if (!response.ok) {
-      return null;
+  const tryHeaders = [
+    { 'Content-Type': 'application/json', 'Authorization': authHeaderValue },
+    { 'Content-Type': 'application/json', 'Authorization': customApiKey }
+  ];
+
+  try {
+    for (const headers of tryHeaders) {
+      const response = await fetch(`${customApiBaseUrl}${customApiChatPath}`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(customApiFormat === 'responses' ? responsesBody : chatBody)
+      });
+
+      if (!response.ok) continue;
+
+      const data = await response.json();
+      if (customApiFormat === 'responses') {
+        const outputText = data?.output_text;
+        if (typeof outputText === 'string' && outputText.trim().length > 0) return outputText;
+        const nestedText = data?.output?.[0]?.content?.[0]?.text;
+        if (typeof nestedText === 'string' && nestedText.trim().length > 0) return nestedText;
+      } else {
+        const content = data?.choices?.[0]?.message?.content;
+        if (typeof content === 'string' && content.trim().length > 0) return content;
+      }
     }
 
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-    return typeof content === 'string' ? content : null;
+    return null;
   } catch {
     return null;
   }
