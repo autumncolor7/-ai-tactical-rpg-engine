@@ -1,5 +1,5 @@
 ﻿import React, { useContext, useEffect, useState } from 'react';
-import { auth, db, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
+import { auth, db, googleProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
 import { GameContext, Entity, Item, CHARACTER_POOL } from '../context/GameContext';
 
 export default function FirebaseSync() {
@@ -40,27 +40,11 @@ export default function FirebaseSync() {
 
   // Handle Auth State
   useEffect(() => {
+    window.localStorage.removeItem('terraBattle.googleRedirectPending');
     if (window.localStorage.getItem('terraBattle.localGuest') === '1') {
       enterLocalGuestMode();
       return;
     }
-
-    getRedirectResult(auth)
-      .then((result) => {
-        const pendingGoogle = window.localStorage.getItem('terraBattle.googleRedirectPending') === '1';
-        if (result?.user) {
-          window.localStorage.removeItem('terraBattle.googleRedirectPending');
-          return;
-        }
-        if (pendingGoogle) {
-          setAuthError('google-redirect-returned-no-user');
-          window.localStorage.removeItem('terraBattle.googleRedirectPending');
-        }
-      })
-      .catch((error: any) => {
-        if (error?.code) setAuthError(error.code);
-        window.localStorage.removeItem('terraBattle.googleRedirectPending');
-      });
 
     console.log("FirebaseSync: Setting up onAuthStateChanged");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -219,34 +203,12 @@ export default function FirebaseSync() {
   const handleGoogleLogin = async () => {
     setAuthError(null);
     window.localStorage.removeItem('terraBattle.localGuest');
-    const fallbackToRedirectErrors = new Set([
-      'auth/operation-not-supported-in-this-environment',
-      'auth/popup-blocked',
-      'auth/cancelled-popup-request'
-    ]);
-
     try {
       await signInWithPopup(auth, googleProvider);
-      window.localStorage.removeItem('terraBattle.googleRedirectPending');
     } catch (error: any) {
       const errorCode = error?.code || 'google-signin-failed';
       console.error("Google popup sign-in failed:", error);
-
-      if (fallbackToRedirectErrors.has(errorCode)) {
-        try {
-          window.localStorage.setItem('terraBattle.googleRedirectPending', '1');
-          await signInWithRedirect(auth, googleProvider);
-          return;
-        } catch (redirectError: any) {
-          console.error("Google redirect sign-in failed:", redirectError);
-          setAuthError(redirectError?.code || errorCode);
-          window.localStorage.removeItem('terraBattle.googleRedirectPending');
-          return;
-        }
-      }
-
       setAuthError(errorCode);
-      window.localStorage.removeItem('terraBattle.googleRedirectPending');
     }
   };
 
