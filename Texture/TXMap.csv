@@ -1,0 +1,24 @@
+id,材質名稱,左上xy,右下xy,檔名
+1,純草地(基礎),0 0,31 31,TX Tileset Grass.png
+2,草地(疏雜草),32 0,63 31,TX Tileset Grass.png
+3,草地(密雜草),64 0,95 31,TX Tileset Grass.png
+4,草地(小碎石),96 0,127 31,TX Tileset Grass.png
+5,草地(白花簇),128 0,159 31,TX Tileset Grass.png
+6,草地(黃花簇),192 0,223 31,TX Tileset Grass.png
+7,完整石磚路(左上),0 128,31 159,TX Tileset Grass.png
+8,完整石磚路(中上),32 128,63 159,TX Tileset Grass.png
+9,石磚路(左側邊緣),0 160,31 191,TX Tileset Grass.png
+10,獨立石磚(草地中),128 160,159 191,TX Tileset Grass.png
+11,石磚路(右側邊緣),192 128,223 159,TX Tileset Grass.png
+12,路徑終端(半碎石),224 224,255 255,TX Tileset Grass.png
+13,巨型石磚(左上),0 0,63 63,TX Tileset Stone Ground.png
+14,邊緣裝飾石條(上),64 0,95 63,TX Tileset Stone Ground.png
+15,直向銜接石柱,96 0,127 63,TX Tileset Stone Ground.png
+16,完整方形大石塊,128 0,191 63,TX Tileset Stone Ground.png
+17,巨型石磚(左下),0 64,63 127,TX Tileset Stone Ground.png
+18,邊緣裝飾石條(下),64 64,95 127,TX Tileset Stone Ground.png
+19,石牆填充區塊,128 128,191 191,TX Tileset Stone Ground.png
+20,帶孔洞裝飾石塊,0 160,63 223,TX Tileset Stone Ground.png
+21,單一方形裝飾塊,128 160,191 223,TX Tileset Stone Ground.png
+22,十字型路徑節點,192 128,255 191,TX Tileset Stone Ground.png
+23,丁字型路徑節點,192 192,255 255,TX Tileset Stone Ground.png
