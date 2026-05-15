@@ -3,6 +3,10 @@ import { Entity } from '../context/GameContext';
 
 const geminiApiKey = process.env.GEMINI_API_KEY;
 let ai: GoogleGenAI | null = null;
+const customApiBaseUrl = process.env.AI_API_BASE_URL?.replace(/\/+$/, '') || '';
+const customApiKey = process.env.AI_API_KEY || '';
+const customApiModel = process.env.AI_API_MODEL || 'gpt-4o-mini';
+const customApiChatPath = process.env.AI_API_CHAT_PATH || '/v1/chat/completions';
 
 function getAiClient(): GoogleGenAI | null {
   if (!geminiApiKey) return null;
@@ -12,9 +16,58 @@ function getAiClient(): GoogleGenAI | null {
   return ai;
 }
 
+function extractJsonObject(text: string): any | null {
+  if (!text) return null;
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    const start = trimmed.indexOf('{');
+    const end = trimmed.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      const candidate = trimmed.slice(start, end + 1);
+      try {
+        return JSON.parse(candidate);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+}
+
+async function callCustomChatApi(systemInstruction: string, userPrompt: string): Promise<string | null> {
+  if (!customApiBaseUrl || !customApiKey) return null;
+  try {
+    const response = await fetch(`${customApiBaseUrl}${customApiChatPath}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${customApiKey}`
+      },
+      body: JSON.stringify({
+        model: customApiModel,
+        temperature: 0.2,
+        messages: [
+          { role: 'system', content: systemInstruction },
+          { role: 'user', content: userPrompt }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data?.choices?.[0]?.message?.content;
+    return typeof content === 'string' ? content : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMap(stage: number, theme: string = "forest", options: { hasNPC?: boolean, enemyType?: string } = {}) {
-  const client = getAiClient();
-  if (!client) return null;
   const model = "gemini-3-flash-preview";
   
   const systemInstruction = `你是一個遊戲關卡設計師。你的任務是生成一個 10x10 的遊戲地圖。
@@ -68,6 +121,15 @@ NPC 與 首領(Boss) 放置：
 注意：x, y 必須在 0-9 之間，且不能在障礙物上。Boss 的佔地大小為 2x2，所以 Boss 的 x, y 必須在 0-8 之間，且其佔用的 4 個格子都不能有障礙物。`;
 
   try {
+    const customResultText = await callCustomChatApi(
+      systemInstruction,
+      `隢蝚?${stage} 撅斤?????{theme}?蜓憿??啣????寞??閮剛?瘙箏??臬? NPC ??Boss?鈭粹????箝?{options.enemyType || '?桅芰'}?`
+    );
+    const customJson = extractJsonObject(customResultText || '');
+    if (customJson) return customJson;
+
+    const client = getAiClient();
+    if (!client) return null;
     const result = await client.models.generateContent({
       model,
       contents: `請為第 ${stage} 層生成一個「${theme}」主題的地圖。請根據關卡設計決定是否加入 NPC 或 Boss。敵人類型應為「${options.enemyType || '普通怪物'}」。`,
@@ -158,14 +220,6 @@ NPC 與 首領(Boss) 放置：
 }
 
 export async function getNPCDialogueResponse(npc: Entity, history: { role: 'npc' | 'player'; content: string }[], playerInput: string) {
-  const client = getAiClient();
-  if (!client) {
-    return {
-      response: "AI dialog is unavailable in this build.",
-      action: "END_DIALOGUE",
-      log: "Gemini API key not configured."
-    };
-  }
   const model = "gemini-3-flash-preview";
   
   const isBoss = npc.type === 'boss_npc';
@@ -223,6 +277,21 @@ ${memoryText}
   });
 
   try {
+    const customPrompt = `${history.map(h => `${h.role}: ${h.content}`).join('\n')}\nplayer: ${playerInput}`;
+    const customResultText = await callCustomChatApi(systemInstruction, customPrompt);
+    const customJson = extractJsonObject(customResultText || '');
+    if (customJson && customJson.response && customJson.action && customJson.log) {
+      return customJson;
+    }
+
+    const client = getAiClient();
+    if (!client) {
+      return {
+        response: "AI dialog is unavailable in this build.",
+        action: "END_DIALOGUE",
+        log: "AI API is not configured."
+      };
+    }
     const result = await client.models.generateContent({
       model,
       contents,
@@ -289,8 +358,6 @@ ${memoryText}
 }
 
 export async function generateCharacterSkills(characterName: string, jobType: string, level: number) {
-  const client = getAiClient();
-  if (!client) return [];
   const model = "gemini-3.1-flash-preview";
 
   const systemInstruction = `你是一個遊戲技能設計師。請為這個角色設計 4 到 9 個專屬技能。
@@ -301,6 +368,14 @@ SP消耗大約在 5 到 30 之間。
 觸發機率大約在 30 到 100 之間。`;
 
   try {
+    const customResultText = await callCustomChatApi(systemInstruction, "隢???脩???撅祆??賬?");
+    const customJson = extractJsonObject(customResultText || '');
+    if (customJson && Array.isArray(customJson.skills)) {
+      return customJson.skills;
+    }
+
+    const client = getAiClient();
+    if (!client) return [];
     const result = await client.models.generateContent({
       model,
       contents: "請為這個角色生成專屬技能。",
