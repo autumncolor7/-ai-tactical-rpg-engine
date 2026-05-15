@@ -10,7 +10,9 @@
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "lint": "tsc --noEmit",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "deploy:firebase": "npm run build && npx firebase-tools deploy --only hosting",
+    "hosting:url": "npx firebase-tools hosting:sites:list"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
