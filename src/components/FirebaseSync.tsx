@@ -1,10 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { auth, db, googleProvider, signInWithPopup, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
+﻿import React, { useContext, useEffect, useState } from 'react';
+import { auth, db, googleProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
 import { GameContext, Entity, Item, CHARACTER_POOL } from '../context/GameContext';
 
 export default function FirebaseSync() {
   const { state, dispatch } = useContext(GameContext);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const stateRef = React.useRef(state);
   const hasLoadedTeamRef = React.useRef(false);
   
@@ -38,7 +39,7 @@ export default function FirebaseSync() {
         console.log("FirebaseSync: Creating new user profile");
         const newUser = {
           uid: userId,
-          displayName: auth.currentUser?.displayName || '冒險者',
+          displayName: auth.currentUser?.displayName || '???,
           email: auth.currentUser?.email || '',
           photoURL: auth.currentUser?.photoURL || '',
           createdAt: new Date().toISOString(),
@@ -60,8 +61,8 @@ export default function FirebaseSync() {
         // Initialize backpack with some items
         console.log("FirebaseSync: Initializing backpack for new user");
         const initialItems = [
-          { id: 'item_potion_1', name: '小瓶生命藥水', description: '恢復 30 點生命值', type: 'HEAL', value: 30, icon: '🧪' },
-          { id: 'item_potion_2', name: '大瓶生命藥水', description: '恢復 80 點生命值', type: 'HEAL', value: 80, icon: '⚗️' }
+          { id: 'item_potion_1', name: '撠??交偌', description: '?Ｗ儔 30 暺??賢?, type: 'HEAL', value: 30, icon: '?妒' },
+          { id: 'item_potion_2', name: '憭抒??交偌', description: '?Ｗ儔 80 暺??賢?, type: 'HEAL', value: 80, icon: '??' }
         ];
         for (const item of initialItems) {
           await setDoc(doc(db, 'users', userId, 'backpack', item.id), item).catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${userId}/backpack/${item.id}`));
@@ -76,7 +77,7 @@ export default function FirebaseSync() {
           type: 'SET_USER', 
           payload: { 
             uid: userId, 
-            displayName: userData.displayName || '冒險者', 
+            displayName: userData.displayName || '???, 
             level: userData.level || 1, 
             exp: userData.exp || 0, 
             gold: userData.gold || 0,
@@ -162,6 +163,32 @@ export default function FirebaseSync() {
       setIsInitialLoad(false);
     } catch (error) {
       console.error("FirebaseSync: Error loading user data:", error);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setAuthError(null);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error: any) {
+      console.error("Google sign-in failed, falling back to guest mode:", error);
+      setAuthError(error?.code || 'google-signin-failed');
+      try {
+        await signInAnonymously(auth);
+      } catch (guestError: any) {
+        console.error("Guest sign-in failed:", guestError);
+        setAuthError(guestError?.code || 'guest-signin-failed');
+      }
+    }
+  };
+
+  const handleGuestLogin = async () => {
+    setAuthError(null);
+    try {
+      await signInAnonymously(auth);
+    } catch (error: any) {
+      console.error("Guest sign-in failed:", error);
+      setAuthError(error?.code || 'guest-signin-failed');
     }
   };
 
@@ -297,15 +324,23 @@ export default function FirebaseSync() {
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[1000] p-6 text-center">
         <h1 className="text-4xl font-bold text-yellow-500 mb-8 tracking-tighter">TERRA BATTLE CLONE</h1>
         <button 
-          onClick={() => signInWithPopup(auth, googleProvider)}
+          onClick={handleGoogleLogin}
           className="px-8 py-4 bg-white text-black font-bold rounded-full uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]"
         >
-          Google 登入開始冒險
+          Google ?餃???
         </button>
-        <p className="mt-8 text-zinc-500 text-xs">登入以保存你的角色與進度</p>
+        <button
+          onClick={handleGuestLogin}
+          className="mt-3 px-8 py-3 bg-zinc-800 text-zinc-100 font-bold rounded-full uppercase tracking-widest hover:bg-zinc-700 transition-colors border border-zinc-600"
+        >
+          Continue as Guest
+        </button>
+        {authError && <p className="mt-4 text-red-400 text-xs">Login error: {authError}</p>}
+        <p className="mt-8 text-zinc-500 text-xs">?餃隞乩?摮????脰??脣漲</p>
       </div>
     );
   }
 
   return null;
 }
+
