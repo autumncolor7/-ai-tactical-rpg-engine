@@ -1,5 +1,5 @@
 ﻿import React, { useContext, useEffect, useState } from 'react';
-import { auth, db, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInAnonymously, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
+import { auth, db, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
 import { GameContext, Entity, Item, CHARACTER_POOL } from '../context/GameContext';
 
 export default function FirebaseSync() {
@@ -18,6 +18,7 @@ export default function FirebaseSync() {
     if (reason) {
       setAuthError(reason);
     }
+    window.localStorage.setItem('terraBattle.localGuest', '1');
 
     const allChars = CHARACTER_POOL.map((c, idx) => ({ ...c, x: 1 + (idx % 3), y: 1 + Math.floor(idx / 3) }));
     const team = allChars.slice(0, 3).map((c, idx) => ({ ...c, x: 1, y: 1 + idx }));
@@ -39,6 +40,11 @@ export default function FirebaseSync() {
 
   // Handle Auth State
   useEffect(() => {
+    if (window.localStorage.getItem('terraBattle.localGuest') === '1') {
+      enterLocalGuestMode();
+      return;
+    }
+
     getRedirectResult(auth).catch((error: any) => {
       if (error?.code) setAuthError(error.code);
     });
@@ -214,12 +220,7 @@ export default function FirebaseSync() {
 
   const handleGuestLogin = async () => {
     setAuthError(null);
-    try {
-      await signInAnonymously(auth);
-    } catch (error: any) {
-      console.error("Guest sign-in failed:", error);
-      enterLocalGuestMode(error?.code || 'guest-signin-failed');
-    }
+    enterLocalGuestMode();
   };
 
   const handleOfflineMode = () => {
