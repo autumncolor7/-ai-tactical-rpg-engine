@@ -1,5 +1,5 @@
 ﻿import React, { useContext, useEffect, useState } from 'react';
-import { auth, db, googleProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
+import { auth, db, googleProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInAnonymously, onAuthStateChanged, doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, OperationType, handleFirestoreError } from '../firebase';
 import { GameContext, Entity, Item, CHARACTER_POOL } from '../context/GameContext';
 
 export default function FirebaseSync() {
@@ -16,6 +16,10 @@ export default function FirebaseSync() {
 
   // Handle Auth State
   useEffect(() => {
+    getRedirectResult(auth).catch((error: any) => {
+      if (error?.code) setAuthError(error.code);
+    });
+
     console.log("FirebaseSync: Setting up onAuthStateChanged");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("FirebaseSync: onAuthStateChanged fired, user:", user?.uid);
@@ -169,17 +173,16 @@ export default function FirebaseSync() {
 
   const handleGoogleLogin = async () => {
     setAuthError(null);
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     try {
+      if (isMobile) {
+        await signInWithRedirect(auth, googleProvider);
+        return;
+      }
       await signInWithPopup(auth, googleProvider);
     } catch (error: any) {
-      console.error("Google sign-in failed, falling back to guest mode:", error);
+      console.error("Google sign-in failed:", error);
       setAuthError(error?.code || 'google-signin-failed');
-      try {
-        await signInAnonymously(auth);
-      } catch (guestError: any) {
-        console.error("Guest sign-in failed:", guestError);
-        setAuthError(guestError?.code || 'guest-signin-failed');
-      }
     }
   };
 
