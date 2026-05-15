@@ -1,0 +1,5 @@
+{
+  "name": "AI Tactical RPG Engine",
+  "description": "A 2D Tile-based Tactical RPG driven by AI-generated JSON content.",
+  "requestFramePermissions": []
+}

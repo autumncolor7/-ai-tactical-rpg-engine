@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{uid}
+    // Document ID: {uid} (User ID)
+    // Fields:
+    //   - uid: string (required)
+    //   - displayName: string (optional)
+    //   - email: string (optional)
+    //   - photoURL: string (optional)
+    //   - level: integer (required)
+    //   - exp: integer (required)
+    //   - gold: integer (required)
+    //   - stage: integer (required)
+    //   - team_ids: list (required)
+    //   - createdAt: string (optional)
+    //
+    // Collection: /users/{uid}/characters/{charId}
+    // Document ID: {charId} (Unique ID)
+    // Fields:
+    //   - id: string (required)
+    //   - ref_id: string (optional)
+    //   - name: string (required)
+    //   - avatar: string (optional)
+    //   - type: string (optional)
+    //   - class_type: string (optional)
+    //   - job_type: string (optional)
+    //   - level: integer (required)
+    //   - exp: integer (required)
+    //   - sp: integer (required)
+    //   - hp: integer (required)
+    //   - max_hp: integer (required)
+    //   - atk: integer (optional)
+    //   - def: integer (optional)
+    //   - sb: number (required)
+    //   - shield: integer (optional)
+    //   - equipped_skills: list (required)
+    //   - skills: list (required)
+    //
+    // Collection: /users/{uid}/backpack/{itemId}
+    // Document ID: {itemId} (Unique ID)
+    // Fields:
+    //   - id: string (required)
+    //   - name: string (required)
+    //   - description: string (optional)
+    //   - type: string (required)
+    //   - value: number (required)
+    //   - icon: string (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidUserProfile(data) {
+      return data.uid is string &&
+             data.level is int && data.level >= 1 &&
+             data.exp is int && data.exp >= 0 &&
+             data.gold is int && data.gold >= 0 &&
+             data.stage is int && data.stage >= 1 &&
+             data.team_ids is list;
+    }
+
+    function isValidCharacter(data) {
+      return data.id is string &&
+             data.name is string &&
+             data.level is int && data.level >= 1 &&
+             data.exp is int && data.exp >= 0 &&
+             data.sp is int && data.sp >= 0 &&
+             data.hp is int &&
+             data.max_hp is int &&
+             data.sb is number && data.sb >= 0 && data.sb <= 100 &&
+             data.equipped_skills is list &&
+             data.skills is list;
+    }
+
+    function isValidBackpackItem(data) {
+      return data.id is string &&
+             data.name is string &&
+             data.type is string &&
+             data.value is number &&
+             data.icon is string;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && hasRequiredFields(['uid', 'level', 'exp', 'gold', 'stage', 'team_ids']) && isValidUserProfile(request.resource.data);
+      allow update: if isOwner(uid) && isValidUserProfile(request.resource.data);
+
+      match /characters/{charId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && hasRequiredFields(['id', 'level', 'exp', 'sp', 'hp', 'max_hp', 'sb', 'equipped_skills', 'skills']) && isValidCharacter(request.resource.data);
+        allow update: if isOwner(uid) && isValidCharacter(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+
+      match /backpack/{itemId} {
+        allow read: if isOwner(uid);
+        allow create: if isOwner(uid) && hasRequiredFields(['id', 'name', 'type', 'value', 'icon']) && isValidBackpackItem(request.resource.data);
+        allow update: if isOwner(uid) && isValidBackpackItem(request.resource.data);
+        allow delete: if isOwner(uid);
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user-specific game progress and settings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique ID of the user." },
+        "displayName": { "type": "string", "description": "The display name of the user." },
+        "email": { "type": "string", "description": "The email of the user." },
+        "photoURL": { "type": "string", "description": "The photo URL of the user." },
+        "level": { "type": "integer", "description": "The overall level of the user." },
+        "exp": { "type": "integer", "description": "The experience points of the user." },
+        "gold": { "type": "integer", "description": "The currency of the user." },
+        "stage": { "type": "integer", "description": "The current stage reached by the user." },
+        "team_ids": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of character IDs in the current team."
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user was created." }
+      },
+      "required": ["uid", "level", "exp", "gold", "stage", "team_ids"]
+    },
+    "Character": {
+      "title": "Character",
+      "description": "Represents a character owned by the user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the character instance." },
+        "ref_id": { "type": "string", "description": "Reference ID to the character template." },
+        "name": { "type": "string", "description": "Name of the character." },
+        "avatar": { "type": "string", "description": "Emoji avatar." },
+        "type": { "type": "string", "enum": ["player", "monster", "npc"] },
+        "class_type": { "type": "string", "enum": ["MELEE", "RANGED", "MAGIC", "NONE"] },
+        "job_type": { "type": "string" },
+        "level": { "type": "integer", "description": "Current level of the character." },
+        "exp": { "type": "integer", "description": "Current experience points of the character." },
+        "sp": { "type": "integer", "description": "Current skill points of the character." },
+        "hp": { "type": "integer", "description": "Current HP." },
+        "max_hp": { "type": "integer", "description": "Maximum HP." },
+        "atk": { "type": "integer", "description": "Attack power." },
+        "def": { "type": "integer", "description": "Defense power." },
+        "sb": { "type": "number", "description": "Skill Boost value (0-100)." },
+        "shield": { "type": "integer", "description": "Current shield value." },
+        "equipped_skills": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of up to 3 equipped skill IDs."
+        },
+        "skills": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of all skills learned by the character."
+        }
+      },
+      "required": ["id", "level", "exp", "sp", "hp", "max_hp", "sb", "equipped_skills", "skills"]
+    },
+    "BackpackItem": {
+      "title": "Backpack Item",
+      "description": "An item in the user's backpack.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the item instance." },
+        "name": { "type": "string", "description": "Name of the item." },
+        "description": { "type": "string", "description": "Item description." },
+        "type": { "type": "string", "enum": ["HEAL", "BUFF", "KEY", "EXP_TOME"] },
+        "value": { "type": "number", "description": "Effect value." },
+        "icon": { "type": "string", "description": "Emoji icon." }
+      },
+      "required": ["id", "name", "type", "value", "icon"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/users/{uid}/characters/{charId}": {
+      "schema": "Character",
+      "description": "Characters owned by the user."
+    },
+    "/users/{uid}/backpack/{itemId}": {
+      "schema": "BackpackItem",
+      "description": "Items in the user's backpack."
+    }
+  }
+}
+

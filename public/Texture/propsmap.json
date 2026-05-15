@@ -1,0 +1,588 @@
+{
+  "frames": [
+    {
+      "filename": "tree-large",
+      "frame": {"x": 1, "y": 1, "w": 113, "h": 139},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 113, "h": 139},
+      "sourceSize": {"w": 113, "h": 139}
+    },
+    {
+      "filename": "tree-medium",
+      "frame": {"x": 1, "y": 142, "w": 97, "h": 136},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 97, "h": 136},
+      "sourceSize": {"w": 97, "h": 136}
+    },
+    {
+      "filename": "tree-small",
+      "frame": {"x": 99, "y": 280, "w": 79, "h": 120},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 79, "h": 120},
+      "sourceSize": {"w": 79, "h": 120}
+    },
+    {
+      "filename": "pixel-debris-1",
+      "frame": {"x": 1, "y": 508, "w": 2, "h": 2},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 2, "h": 2},
+      "sourceSize": {"w": 2, "h": 2}
+    },
+    {
+      "filename": "bush-small-1",
+      "frame": {"x": 401, "y": 75, "w": 22, "h": 19},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 22, "h": 19},
+      "sourceSize": {"w": 22, "h": 19}
+    },
+    {
+      "filename": "bush-small-2",
+      "frame": {"x": 188, "y": 248, "w": 27, "h": 25},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 25},
+      "sourceSize": {"w": 27, "h": 25}
+    },
+    {
+      "filename": "bush-medium-1",
+      "frame": {"x": 180, "y": 375, "w": 38, "h": 32},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 38, "h": 32},
+      "sourceSize": {"w": 38, "h": 32}
+    },
+    {
+      "filename": "bush-large",
+      "frame": {"x": 330, "y": 284, "w": 47, "h": 42},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 47, "h": 42},
+      "sourceSize": {"w": 47, "h": 42}
+    },
+    {
+      "filename": "bush-medium-2",
+      "frame": {"x": 313, "y": 328, "w": 39, "h": 45},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 39, "h": 45},
+      "sourceSize": {"w": 39, "h": 45}
+    },
+    {
+      "filename": "bush-small-3",
+      "frame": {"x": 314, "y": 99, "w": 40, "h": 35},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 40, "h": 35},
+      "sourceSize": {"w": 40, "h": 35}
+    },
+    {
+      "filename": "stone-sign-rock",
+      "frame": {"x": 388, "y": 342, "w": 32, "h": 46},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 46},
+      "sourceSize": {"w": 32, "h": 46}
+    },
+    {
+      "filename": "pot-ceramic-large",
+      "frame": {"x": 275, "y": 477, "w": 32, "h": 31},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 31},
+      "sourceSize": {"w": 32, "h": 31}
+    },
+    {
+      "filename": "tombstone-tall-cross",
+      "frame": {"x": 462, "y": 287, "w": 32, "h": 46},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 46},
+      "sourceSize": {"w": 32, "h": 46}
+    },
+    {
+      "filename": "pillar-broken",
+      "frame": {"x": 399, "y": 288, "w": 26, "h": 52},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 26, "h": 52},
+      "sourceSize": {"w": 26, "h": 52}
+    },
+    {
+      "filename": "bench-stone",
+      "frame": {"x": 116, "y": 99, "w": 56, "h": 41},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 56, "h": 41},
+      "sourceSize": {"w": 56, "h": 41}
+    },
+    {
+      "filename": "chest-open",
+      "frame": {"x": 428, "y": 280, "w": 32, "h": 49},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 49},
+      "sourceSize": {"w": 32, "h": 49}
+    },
+    {
+      "filename": "chest-closed",
+      "frame": {"x": 234, "y": 99, "w": 26, "h": 39},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 26, "h": 39},
+      "sourceSize": {"w": 26, "h": 39}
+    },
+    {
+      "filename": "signpost-east-west",
+      "frame": {"x": 252, "y": 409, "w": 26, "h": 66},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 26, "h": 66},
+      "sourceSize": {"w": 26, "h": 66}
+    },
+    {
+      "filename": "tomb-stone-base",
+      "frame": {"x": 217, "y": 239, "w": 64, "h": 36},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 36},
+      "sourceSize": {"w": 64, "h": 36}
+    },
+    {
+      "filename": "cart-wood",
+      "frame": {"x": 428, "y": 228, "w": 41, "h": 50},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 41, "h": 50},
+      "sourceSize": {"w": 41, "h": 50}
+    },
+    {
+      "filename": "wall-pillar-tall-1",
+      "frame": {"x": 399, "y": 162, "w": 27, "h": 61},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 61},
+      "sourceSize": {"w": 27, "h": 61}
+    },
+    {
+      "filename": "statue-praying",
+      "frame": {"x": 316, "y": 1, "w": 37, "h": 73},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 37, "h": 73},
+      "sourceSize": {"w": 37, "h": 73}
+    },
+    {
+      "filename": "wall-pillar-tall-2",
+      "frame": {"x": 399, "y": 225, "w": 27, "h": 61},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 61},
+      "sourceSize": {"w": 27, "h": 61}
+    },
+    {
+      "filename": "lantern-stone",
+      "frame": {"x": 290, "y": 99, "w": 22, "h": 38},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 22, "h": 38},
+      "sourceSize": {"w": 22, "h": 38}
+    },
+    {
+      "filename": "pillar-basin",
+      "frame": {"x": 304, "y": 139, "w": 32, "h": 77},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 77},
+      "sourceSize": {"w": 32, "h": 77}
+    },
+    {
+      "filename": "wall-ruin-piece",
+      "frame": {"x": 354, "y": 328, "w": 32, "h": 57},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 57},
+      "sourceSize": {"w": 32, "h": 57}
+    },
+    {
+      "filename": "platform-circular-runes",
+      "frame": {"x": 355, "y": 1, "w": 94, "h": 72},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 94, "h": 72},
+      "sourceSize": {"w": 94, "h": 72}
+    },
+    {
+      "filename": "wall-circular-ruins",
+      "frame": {"x": 451, "y": 45, "w": 55, "h": 49},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 55, "h": 49},
+      "sourceSize": {"w": 55, "h": 49}
+    },
+    {
+      "filename": "block-stone-square",
+      "frame": {"x": 428, "y": 331, "w": 32, "h": 46},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 46},
+      "sourceSize": {"w": 32, "h": 46}
+    },
+    {
+      "filename": "pot-small-1",
+      "frame": {"x": 278, "y": 375, "w": 21, "h": 32},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 21, "h": 32},
+      "sourceSize": {"w": 21, "h": 32}
+    },
+    {
+      "filename": "barrel-wood",
+      "frame": {"x": 283, "y": 237, "w": 28, "h": 36},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 28, "h": 36},
+      "sourceSize": {"w": 28, "h": 36}
+    },
+    {
+      "filename": "tombstone-arched",
+      "frame": {"x": 262, "y": 99, "w": 26, "h": 38},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 26, "h": 38},
+      "sourceSize": {"w": 26, "h": 38}
+    },
+    {
+      "filename": "crates-stacked",
+      "frame": {"x": 471, "y": 228, "w": 32, "h": 57},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 57},
+      "sourceSize": {"w": 32, "h": 57}
+    },
+    {
+      "filename": "pot-small-2",
+      "frame": {"x": 252, "y": 477, "w": 21, "h": 34},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 21, "h": 34},
+      "sourceSize": {"w": 21, "h": 34}
+    },
+    {
+      "filename": "tombstone-rip",
+      "frame": {"x": 174, "y": 99, "w": 30, "h": 41},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 30, "h": 41},
+      "sourceSize": {"w": 30, "h": 41}
+    },
+    {
+      "filename": "tombstone-small",
+      "frame": {"x": 100, "y": 248, "w": 30, "h": 29},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 30, "h": 29},
+      "sourceSize": {"w": 30, "h": 29}
+    },
+    {
+      "filename": "rock-small-1",
+      "frame": {"x": 161, "y": 248, "w": 25, "h": 27},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 25, "h": 27},
+      "sourceSize": {"w": 25, "h": 27}
+    },
+    {
+      "filename": "tombstone-cross",
+      "frame": {"x": 206, "y": 99, "w": 26, "h": 40},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 26, "h": 40},
+      "sourceSize": {"w": 26, "h": 40}
+    },
+    {
+      "filename": "rubble-small-1",
+      "frame": {"x": 349, "y": 76, "w": 24, "h": 19},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 24, "h": 19},
+      "sourceSize": {"w": 24, "h": 19}
+    },
+    {
+      "filename": "rubble-small-2",
+      "frame": {"x": 375, "y": 75, "w": 24, "h": 19},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 24, "h": 19},
+      "sourceSize": {"w": 24, "h": 19}
+    },
+    {
+      "filename": "wood-plank-vertical-1",
+      "frame": {"x": 372, "y": 162, "w": 9, "h": 53},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 9, "h": 53},
+      "sourceSize": {"w": 9, "h": 53}
+    },
+    {
+      "filename": "wood-plank-vertical-2",
+      "frame": {"x": 383, "y": 162, "w": 9, "h": 53},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 9, "h": 53},
+      "sourceSize": {"w": 9, "h": 53}
+    },
+    {
+      "filename": "rock-small-2",
+      "frame": {"x": 220, "y": 375, "w": 27, "h": 32},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 32},
+      "sourceSize": {"w": 27, "h": 32}
+    },
+    {
+      "filename": "rock-small-3",
+      "frame": {"x": 249, "y": 375, "w": 27, "h": 32},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 32},
+      "sourceSize": {"w": 27, "h": 32}
+    },
+    {
+      "filename": "rock-cluster-large",
+      "frame": {"x": 451, "y": 1, "w": 57, "h": 42},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 57, "h": 42},
+      "sourceSize": {"w": 57, "h": 42}
+    },
+    {
+      "filename": "pixel-debris-2",
+      "frame": {"x": 5, "y": 508, "w": 1, "h": 1},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 1, "h": 1},
+      "sourceSize": {"w": 1, "h": 1}
+    },
+    {
+      "filename": "rock-tiny-1",
+      "frame": {"x": 356, "y": 113, "w": 11, "h": 10},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 11, "h": 10},
+      "sourceSize": {"w": 11, "h": 10}
+    },
+    {
+      "filename": "rock-tiny-2",
+      "frame": {"x": 356, "y": 97, "w": 16, "h": 14},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 16, "h": 14},
+      "sourceSize": {"w": 16, "h": 14}
+    },
+    {
+      "filename": "rock-medium",
+      "frame": {"x": 301, "y": 375, "w": 27, "h": 22},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 22},
+      "sourceSize": {"w": 27, "h": 22}
+    },
+    {
+      "filename": "pot-round",
+      "frame": {"x": 132, "y": 248, "w": 27, "h": 27},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 27, "h": 27},
+      "sourceSize": {"w": 27, "h": 27}
+    },
+    {
+      "filename": "rock-tiny-3",
+      "frame": {"x": 425, "y": 75, "w": 18, "h": 16},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 18, "h": 16},
+      "sourceSize": {"w": 18, "h": 16}
+    },
+    {
+      "filename": "rock-tiny-4",
+      "frame": {"x": 304, "y": 218, "w": 19, "h": 16},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 19, "h": 16},
+      "sourceSize": {"w": 19, "h": 16}
+    },
+    {
+      "filename": "stepping-stones",
+      "frame": {"x": 316, "y": 76, "w": 31, "h": 19},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 31, "h": 19},
+      "sourceSize": {"w": 31, "h": 19}
+    },
+    {
+      "filename": "stairs-vertical-stone",
+      "frame": {"x": 216, "y": 141, "w": 64, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},
+      "sourceSize": {"w": 64, "h": 96}
+    },
+    {
+      "filename": "stairs-mossy-left",
+      "frame": {"x": 180, "y": 277, "w": 65, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 65, "h": 96},
+      "sourceSize": {"w": 65, "h": 96}
+    },
+    {
+      "filename": "stairs-vertical-stone-long",
+      "frame": {"x": 185, "y": 409, "w": 65, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 65, "h": 96},
+      "sourceSize": {"w": 65, "h": 96}
+    },
+    {
+      "filename": "archway-bridge-center",
+      "frame": {"x": 280, "y": 409, "w": 80, "h": 64},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 80, "h": 64},
+      "sourceSize": {"w": 80, "h": 64}
+    },
+    {
+      "filename": "stairs-mossy-right",
+      "frame": {"x": 247, "y": 277, "w": 64, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},
+      "sourceSize": {"w": 64, "h": 96}
+    },
+    {
+      "filename": "wall-stone-left",
+      "frame": {"x": 116, "y": 1, "w": 65, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 65, "h": 96},
+      "sourceSize": {"w": 65, "h": 96}
+    },
+    {
+      "filename": "wall-stone-right",
+      "frame": {"x": 183, "y": 1, "w": 65, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 65, "h": 96},
+      "sourceSize": {"w": 65, "h": 96}
+    },
+    {
+      "filename": "archway-bridge-pillar",
+      "frame": {"x": 362, "y": 409, "w": 64, "h": 64},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 64},
+      "sourceSize": {"w": 64, "h": 64}
+    },
+    {
+      "filename": "stairs-diagonal-left",
+      "frame": {"x": 1, "y": 410, "w": 90, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 90, "h": 96},
+      "sourceSize": {"w": 90, "h": 96}
+    },
+    {
+      "filename": "stairs-diagonal-right",
+      "frame": {"x": 93, "y": 410, "w": 90, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 90, "h": 96},
+      "sourceSize": {"w": 90, "h": 96}
+    },
+    {
+      "filename": "wall-frame-square",
+      "frame": {"x": 1, "y": 280, "w": 96, "h": 128},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 96, "h": 128},
+      "sourceSize": {"w": 96, "h": 128}
+    },
+    {
+      "filename": "wall-frame-window",
+      "frame": {"x": 100, "y": 142, "w": 114, "h": 104},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 114, "h": 104},
+      "sourceSize": {"w": 114, "h": 104}
+    },
+    {
+      "filename": "wall-divider-left",
+      "frame": {"x": 282, "y": 139, "w": 10, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 10, "h": 96},
+      "sourceSize": {"w": 10, "h": 96}
+    },
+    {
+      "filename": "wall-divider-right",
+      "frame": {"x": 294, "y": 139, "w": 8, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 8, "h": 96},
+      "sourceSize": {"w": 8, "h": 96}
+    },
+    {
+      "filename": "wall-ledge-horizontal",
+      "frame": {"x": 301, "y": 399, "w": 96, "h": 8},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 96, "h": 8},
+      "sourceSize": {"w": 96, "h": 8}
+    },
+    {
+      "filename": "wall-window-inset",
+      "frame": {"x": 250, "y": 1, "w": 64, "h": 96},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 96},
+      "sourceSize": {"w": 64, "h": 96}
+    },
+    {
+      "filename": "wall-brick-horizontal",
+      "frame": {"x": 375, "y": 96, "w": 128, "h": 64},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 128, "h": 64},
+      "sourceSize": {"w": 128, "h": 64}
+    },
+    {
+      "filename": "wall-brick-pillar-short",
+      "frame": {"x": 338, "y": 136, "w": 32, "h": 64},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 32, "h": 64},
+      "sourceSize": {"w": 32, "h": 64}
+    },
+    {
+      "filename": "wall-brick-square-1",
+      "frame": {"x": 428, "y": 162, "w": 64, "h": 64},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 64},
+      "sourceSize": {"w": 64, "h": 64}
+    },
+    {
+      "filename": "wall-brick-square-2",
+      "frame": {"x": 330, "y": 218, "w": 64, "h": 64},
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {"x": 0, "y": 0, "w": 64, "h": 64},
+      "sourceSize": {"w": 64, "h": 64}
+    }
+  ]
+}
