@@ -1,9 +1,20 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Entity } from '../context/GameContext';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const geminiApiKey = process.env.GEMINI_API_KEY;
+let ai: GoogleGenAI | null = null;
+
+function getAiClient(): GoogleGenAI | null {
+  if (!geminiApiKey) return null;
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey: geminiApiKey });
+  }
+  return ai;
+}
 
 export async function generateMap(stage: number, theme: string = "forest", options: { hasNPC?: boolean, enemyType?: string } = {}) {
+  const client = getAiClient();
+  if (!client) return null;
   const model = "gemini-3-flash-preview";
   
   const systemInstruction = `你是一個遊戲關卡設計師。你的任務是生成一個 10x10 的遊戲地圖。
@@ -57,7 +68,7 @@ NPC 與 首領(Boss) 放置：
 注意：x, y 必須在 0-9 之間，且不能在障礙物上。Boss 的佔地大小為 2x2，所以 Boss 的 x, y 必須在 0-8 之間，且其佔用的 4 個格子都不能有障礙物。`;
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await client.models.generateContent({
       model,
       contents: `請為第 ${stage} 層生成一個「${theme}」主題的地圖。請根據關卡設計決定是否加入 NPC 或 Boss。敵人類型應為「${options.enemyType || '普通怪物'}」。`,
       config: {
@@ -147,6 +158,14 @@ NPC 與 首領(Boss) 放置：
 }
 
 export async function getNPCDialogueResponse(npc: Entity, history: { role: 'npc' | 'player'; content: string }[], playerInput: string) {
+  const client = getAiClient();
+  if (!client) {
+    return {
+      response: "AI dialog is unavailable in this build.",
+      action: "END_DIALOGUE",
+      log: "Gemini API key not configured."
+    };
+  }
   const model = "gemini-3-flash-preview";
   
   const isBoss = npc.type === 'boss_npc';
@@ -204,7 +223,7 @@ ${memoryText}
   });
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await client.models.generateContent({
       model,
       contents,
       config: {
@@ -270,6 +289,8 @@ ${memoryText}
 }
 
 export async function generateCharacterSkills(characterName: string, jobType: string, level: number) {
+  const client = getAiClient();
+  if (!client) return [];
   const model = "gemini-3.1-flash-preview";
 
   const systemInstruction = `你是一個遊戲技能設計師。請為這個角色設計 4 到 9 個專屬技能。
@@ -280,7 +301,7 @@ SP消耗大約在 5 到 30 之間。
 觸發機率大約在 30 到 100 之間。`;
 
   try {
-    const result = await ai.models.generateContent({
+    const result = await client.models.generateContent({
       model,
       contents: "請為這個角色生成專屬技能。",
       config: {
