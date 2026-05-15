@@ -45,9 +45,22 @@ export default function FirebaseSync() {
       return;
     }
 
-    getRedirectResult(auth).catch((error: any) => {
-      if (error?.code) setAuthError(error.code);
-    });
+    getRedirectResult(auth)
+      .then((result) => {
+        const pendingGoogle = window.localStorage.getItem('terraBattle.googleRedirectPending') === '1';
+        if (result?.user) {
+          window.localStorage.removeItem('terraBattle.googleRedirectPending');
+          return;
+        }
+        if (pendingGoogle) {
+          setAuthError('google-redirect-returned-no-user');
+          window.localStorage.removeItem('terraBattle.googleRedirectPending');
+        }
+      })
+      .catch((error: any) => {
+        if (error?.code) setAuthError(error.code);
+        window.localStorage.removeItem('terraBattle.googleRedirectPending');
+      });
 
     console.log("FirebaseSync: Setting up onAuthStateChanged");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -205,6 +218,8 @@ export default function FirebaseSync() {
 
   const handleGoogleLogin = async () => {
     setAuthError(null);
+    window.localStorage.removeItem('terraBattle.localGuest');
+    window.localStorage.setItem('terraBattle.googleRedirectPending', '1');
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     try {
       if (isMobile) {
@@ -215,6 +230,7 @@ export default function FirebaseSync() {
     } catch (error: any) {
       console.error("Google sign-in failed:", error);
       setAuthError(error?.code || 'google-signin-failed');
+      window.localStorage.removeItem('terraBattle.googleRedirectPending');
     }
   };
 
