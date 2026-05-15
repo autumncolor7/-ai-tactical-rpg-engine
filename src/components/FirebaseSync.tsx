@@ -6,6 +6,7 @@ export default function FirebaseSync() {
   const { state, dispatch } = useContext(GameContext);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const isOfflineUser = state.user?.uid === 'local-guest';
   const stateRef = React.useRef(state);
   const hasLoadedTeamRef = React.useRef(false);
   
@@ -39,7 +40,7 @@ export default function FirebaseSync() {
         console.log("FirebaseSync: Creating new user profile");
         const newUser = {
           uid: userId,
-          displayName: auth.currentUser?.displayName || '???,
+          displayName: auth.currentUser?.displayName || 'Adventurer',
           email: auth.currentUser?.email || '',
           photoURL: auth.currentUser?.photoURL || '',
           createdAt: new Date().toISOString(),
@@ -61,8 +62,8 @@ export default function FirebaseSync() {
         // Initialize backpack with some items
         console.log("FirebaseSync: Initializing backpack for new user");
         const initialItems = [
-          { id: 'item_potion_1', name: '撠??交偌', description: '?Ｗ儔 30 暺??賢?, type: 'HEAL', value: 30, icon: '?妒' },
-          { id: 'item_potion_2', name: '憭抒??交偌', description: '?Ｗ儔 80 暺??賢?, type: 'HEAL', value: 80, icon: '??' }
+          { id: 'item_potion_1', name: 'Small Potion', description: 'Recover 30 HP', type: 'HEAL', value: 30, icon: '🧪' },
+          { id: 'item_potion_2', name: 'Large Potion', description: 'Recover 80 HP', type: 'HEAL', value: 80, icon: '🧴' }
         ];
         for (const item of initialItems) {
           await setDoc(doc(db, 'users', userId, 'backpack', item.id), item).catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${userId}/backpack/${item.id}`));
@@ -77,7 +78,7 @@ export default function FirebaseSync() {
           type: 'SET_USER', 
           payload: { 
             uid: userId, 
-            displayName: userData.displayName || '???, 
+            displayName: userData.displayName || 'Adventurer', 
             level: userData.level || 1, 
             exp: userData.exp || 0, 
             gold: userData.gold || 0,
@@ -192,10 +193,28 @@ export default function FirebaseSync() {
     }
   };
 
+  const handleOfflineMode = () => {
+    const allChars = CHARACTER_POOL.map((c, idx) => ({ ...c, x: 1 + (idx % 3), y: 1 + Math.floor(idx / 3) }));
+    const team = allChars.slice(0, 3).map((c, idx) => ({ ...c, x: 1, y: 1 + idx }));
+    const backpack: Item[] = [
+      { id: 'offline_potion_1', name: 'Small Potion', description: 'Recover 30 HP', type: 'HEAL', value: 30, icon: '🧪' },
+      { id: 'offline_potion_2', name: 'Large Potion', description: 'Recover 80 HP', type: 'HEAL', value: 80, icon: '🧴' }
+    ];
+
+    dispatch({
+      type: 'SET_USER',
+      payload: { uid: 'local-guest', displayName: 'Offline Guest', level: 1, exp: 0, gold: 0 }
+    });
+    dispatch({ type: 'SET_STAGE', payload: 1 });
+    dispatch({ type: 'SET_ALL_CHARACTERS', payload: allChars });
+    dispatch({ type: 'SET_TEAM', payload: team });
+    dispatch({ type: 'SET_BACKPACK', payload: backpack });
+  };
+
   // Sync backpack changes back to Firestore
   const prevBackpackRef = React.useRef<Item[]>([]);
   useEffect(() => {
-    if (state.user) {
+    if (state.user && !isOfflineUser) {
       const userId = state.user.uid;
       const currentIds = new Set<string>(state.player_state.backpack.map(i => i.id));
       const prevIds = new Set<string>(prevBackpackRef.current.map(i => i.id));
@@ -220,7 +239,7 @@ export default function FirebaseSync() {
   // Sync character changes back to Firestore
   const lastSyncedCharsRef = React.useRef<string>('');
   useEffect(() => {
-    if (state.user && state.player_state.all_characters.length > 0) {
+    if (state.user && !isOfflineUser && state.player_state.all_characters.length > 0) {
       const userId = state.user.uid;
       
       // Create a stable key for checking if meaningful data changed
@@ -257,7 +276,7 @@ export default function FirebaseSync() {
   // Sync user progress back to Firestore
   const lastSyncedProgressRef = React.useRef<string>('');
   useEffect(() => {
-    if (state.user) {
+    if (state.user && !isOfflineUser) {
       const userRef = doc(db, 'users', state.user.uid);
       const updateData = {
         stage: state.stage,
@@ -289,7 +308,7 @@ export default function FirebaseSync() {
   // Sync team changes back to Firestore
   const lastSyncedTeamRef = React.useRef<string>('');
   useEffect(() => {
-    if (state.user && hasLoadedTeamRef.current && state.player_state.team.length > 0) {
+    if (state.user && !isOfflineUser && hasLoadedTeamRef.current && state.player_state.team.length > 0) {
       const userRef = doc(db, 'users', state.user.uid);
       const teamIds = state.player_state.team.map(m => m.id);
       
@@ -327,7 +346,7 @@ export default function FirebaseSync() {
           onClick={handleGoogleLogin}
           className="px-8 py-4 bg-white text-black font-bold rounded-full uppercase tracking-widest hover:bg-zinc-200 transition-colors shadow-[0_0_20px_rgba(255,255,255,0.2)]"
         >
-          Google ?餃???
+          Sign in with Google
         </button>
         <button
           onClick={handleGuestLogin}
@@ -335,8 +354,14 @@ export default function FirebaseSync() {
         >
           Continue as Guest
         </button>
+        <button
+          onClick={handleOfflineMode}
+          className="mt-3 px-8 py-3 bg-zinc-900 text-zinc-100 font-bold rounded-full uppercase tracking-widest hover:bg-zinc-800 transition-colors border border-zinc-500"
+        >
+          Offline Mode
+        </button>
         {authError && <p className="mt-4 text-red-400 text-xs">Login error: {authError}</p>}
-        <p className="mt-8 text-zinc-500 text-xs">?餃隞乩?摮????脰??脣漲</p>
+        <p className="mt-8 text-zinc-500 text-xs">If Firebase auth is blocked, use Offline Mode.</p>
       </div>
     );
   }
