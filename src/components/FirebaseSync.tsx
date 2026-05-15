@@ -14,6 +14,29 @@ export default function FirebaseSync() {
     stateRef.current = state;
   }, [state]);
 
+  const enterLocalGuestMode = (reason?: string) => {
+    if (reason) {
+      setAuthError(reason);
+    }
+
+    const allChars = CHARACTER_POOL.map((c, idx) => ({ ...c, x: 1 + (idx % 3), y: 1 + Math.floor(idx / 3) }));
+    const team = allChars.slice(0, 3).map((c, idx) => ({ ...c, x: 1, y: 1 + idx }));
+    const backpack: Item[] = [
+      { id: 'local_potion_1', name: 'Small Potion', description: 'Recover 30 HP', type: 'HEAL', value: 30, icon: '🧪' },
+      { id: 'local_potion_2', name: 'Large Potion', description: 'Recover 80 HP', type: 'HEAL', value: 80, icon: '🧴' }
+    ];
+
+    hasLoadedTeamRef.current = true;
+    dispatch({
+      type: 'SET_USER',
+      payload: { uid: 'local-guest', displayName: 'Guest', level: 1, exp: 0, gold: 0 }
+    });
+    dispatch({ type: 'SET_STAGE', payload: 1 });
+    dispatch({ type: 'SET_ALL_CHARACTERS', payload: allChars });
+    dispatch({ type: 'SET_TEAM', payload: team });
+    dispatch({ type: 'SET_BACKPACK', payload: backpack });
+  };
+
   // Handle Auth State
   useEffect(() => {
     getRedirectResult(auth).catch((error: any) => {
@@ -27,7 +50,9 @@ export default function FirebaseSync() {
         // Load initial data from Firestore
         await loadUserData(user.uid);
       } else {
-        dispatch({ type: 'SET_USER', payload: null });
+        if (!stateRef.current.user || stateRef.current.user.uid !== 'local-guest') {
+          dispatch({ type: 'SET_USER', payload: null });
+        }
       }
     });
     return () => unsubscribe();
@@ -168,6 +193,7 @@ export default function FirebaseSync() {
       setIsInitialLoad(false);
     } catch (error) {
       console.error("FirebaseSync: Error loading user data:", error);
+      enterLocalGuestMode(error instanceof Error ? error.message : 'firestore-load-failed');
     }
   };
 
@@ -192,26 +218,12 @@ export default function FirebaseSync() {
       await signInAnonymously(auth);
     } catch (error: any) {
       console.error("Guest sign-in failed:", error);
-      setAuthError(error?.code || 'guest-signin-failed');
+      enterLocalGuestMode(error?.code || 'guest-signin-failed');
     }
   };
 
   const handleOfflineMode = () => {
-    const allChars = CHARACTER_POOL.map((c, idx) => ({ ...c, x: 1 + (idx % 3), y: 1 + Math.floor(idx / 3) }));
-    const team = allChars.slice(0, 3).map((c, idx) => ({ ...c, x: 1, y: 1 + idx }));
-    const backpack: Item[] = [
-      { id: 'offline_potion_1', name: 'Small Potion', description: 'Recover 30 HP', type: 'HEAL', value: 30, icon: '🧪' },
-      { id: 'offline_potion_2', name: 'Large Potion', description: 'Recover 80 HP', type: 'HEAL', value: 80, icon: '🧴' }
-    ];
-
-    dispatch({
-      type: 'SET_USER',
-      payload: { uid: 'local-guest', displayName: 'Offline Guest', level: 1, exp: 0, gold: 0 }
-    });
-    dispatch({ type: 'SET_STAGE', payload: 1 });
-    dispatch({ type: 'SET_ALL_CHARACTERS', payload: allChars });
-    dispatch({ type: 'SET_TEAM', payload: team });
-    dispatch({ type: 'SET_BACKPACK', payload: backpack });
+    enterLocalGuestMode();
   };
 
   // Sync backpack changes back to Firestore
